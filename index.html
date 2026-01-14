@@ -1,189 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>AI + IOT Smart Agriculture System</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI + IOT Smart Agriculture System</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .card {
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    canvas {
-      width: 100% !important;
-      height: 300px !important;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-      font-size: 14px;
-      text-align: center;
-    }
-    th {
-      background: #2e7d32;
-      color: #fff;
-    }
-    a {
-      color: #1a73e8;
-      text-decoration: none;
-    }
-  </style>
+<style>
+:root{
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --green:#22c55e;
+  --blue:#38bdf8;
+  --red:#f87171;
+}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:var(--bg);
+  color:var(--text);
+  padding:12px;
+}
+h1{
+  text-align:center;
+  font-size:1.3rem;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:14px;
+}
+.card{
+  background:var(--card);
+  padding:14px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.card h3{
+  margin:0 0 8px;
+  font-size:.9rem;
+  color:var(--muted);
+}
+canvas{
+  width:100%!important;
+  height:260px!important;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.75rem;
+}
+th,td{
+  padding:6px;
+  border-bottom:1px solid #1e293b;
+  text-align:center;
+}
+th{color:var(--green);}
+a{color:var(--blue);text-decoration:none;}
+.footer{
+  text-align:center;
+  font-size:.7rem;
+  margin-top:10px;
+  color:var(--muted);
+}
+</style>
 </head>
 
 <body>
 
 <h1>🌱 AI + IOT Smart Agriculture System</h1>
 
+
 <div class="grid">
-  <div class="card">
-    <h3>Temperature (°C)</h3>
-    <canvas id="tempChart"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Humidity (%)</h3>
-    <canvas id="humidityChart"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Light Condition</h3>
-    <canvas id="lightChart"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Soil Condition</h3>
-    <canvas id="soilChart"></canvas>
-  </div>
+  <div class="card"><h3>Temperature (°C)</h3><canvas id="tempChart"></canvas></div>
+  <div class="card"><h3>Humidity (%)</h3><canvas id="humChart"></canvas></div>
+  <div class="card"><h3>Temp vs Humidity</h3><canvas id="tempHumChart"></canvas></div>
+  <div class="card"><h3>Soil Condition Over Time</h3><canvas id="soilTimeChart"></canvas></div>
+  <div class="card"><h3>Light Distribution</h3><canvas id="lightChart"></canvas></div>
+  <div class="card"><h3>Soil Distribution</h3><canvas id="soilChart"></canvas></div>
+  <div class="card"><h3>Actions Count</h3><canvas id="actionChart"></canvas></div>
+  <div class="card"><h3>Disease Count</h3><canvas id="diseaseChart"></canvas></div>
 </div>
 
-<div class="card" style="margin-top: 30px;">
-  <h3>Latest Readings</h3>
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Time</th>
-        <th>Temp</th>
-        <th>Humidity</th>
-        <th>Light</th>
-        <th>Soil</th>
-        <th>Image</th>
-        <th>Disease</th>
-        <th>Confidence</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="card" style="margin-top:14px;">
+<h3>Latest Readings</h3>
+<table>
+<thead>
+<tr>
+<th>Time</th><th>T</th><th>H</th><th>Light</th><th>Soil</th>
+<th>Img</th><th>Disease</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
 </div>
 
+<div class="footer">Auto refresh every 60 seconds</div>
+<div class="footer"><h5> Made with ❤️ by Prathamesh </h5></div>
 <script>
-const SHEET_ID = "1ns-4EP_eRR5WDlHlKTnPc-MXrRrKl_TP4LNPajDsb-0";
-const SHEET_NAME = "plant_readings";
-const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`;
+const SHEET_ID="1ns-4EP_eRR5WDlHlKTnPc-MXrRrKl_TP4LNPajDsb-0";
+const SHEET_NAME="plant_readings";
+const REFRESH=60000;
+let charts=[];
 
-fetch(URL)
-  .then(res => res.text())
-  .then(text => {
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const rows = json.table.rows;
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
 
-    const labels = [];
-    const temps = [];
-    const hums = [];
-    const lightCount = { DARK: 0, BRIGHT: 0 };
-    const soilCount = { DRY: 0, WET: 0 };
+function fetchData(){
+fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}&t=${Date.now()}`)
+.then(r=>r.text())
+.then(t=>{
+const rows=JSON.parse(t.substring(47).slice(0,-2)).table.rows.slice(-20);
 
-    const tableBody = document.querySelector("#dataTable tbody");
+let labels=[],temps=[],hums=[],soilSeries=[];
+let light={DARK:0,BRIGHT:0};
+let soil={DRY:0,WET:0};
+let actions={"None":0,"Fan ON":0,"Watered":0};
+let diseases={};
 
-    rows.slice(-20).forEach(r => {
-      const time = r.c[0]?.v || "";
-      const temp = r.c[1]?.v;
-      const hum = r.c[2]?.v;
-      const light = r.c[3]?.v;
-      const soil = r.c[4]?.v;
-      const img = r.c[5]?.v;
-      const disease = r.c[6]?.v;
-      const conf = r.c[7]?.v;
-      const action = r.c[8]?.v;
+const tbody=document.getElementById("tableBody");
+tbody.innerHTML="";
 
-      labels.push(time);
-      temps.push(temp);
-      hums.push(hum);
+rows.forEach(r=>{
+const time=r.c[0]?.v;
+const temp=r.c[1]?.v;
+const hum=r.c[2]?.v;
+const l=r.c[3]?.v;
+const s=r.c[4]?.v;
+const img=r.c[5]?.v;
+const dis=r.c[6]?.v;
+const act=r.c[8]?.v||"None";
 
-      if (light) lightCount[light]++;
-      if (soil) soilCount[soil]++;
+labels.push(time);
+temps.push(temp);
+hums.push(hum);
+soilSeries.push(s==="WET"?1:0);
 
-      tableBody.innerHTML += `
-        <tr>
-          <td>${time}</td>
-          <td>${temp}</td>
-          <td>${hum}</td>
-          <td>${light}</td>
-          <td>${soil}</td>
-          <td><a href="${img}" target="_blank">View</a></td>
-          <td>${disease}</td>
-          <td>${conf}</td>
-          <td>${action}</td>
-        </tr>`;
-    });
+if(l) light[l]++;
+if(s) soil[s]++;
+actions[act]=(actions[act]||0)+1;
+diseases[dis]=(diseases[dis]||0)+1;
 
-    createLineChart("tempChart", labels, temps, "Temperature");
-    createLineChart("humidityChart", labels, hums, "Humidity");
-    createPieChart("lightChart", Object.keys(lightCount), Object.values(lightCount));
-    createPieChart("soilChart", Object.keys(soilCount), Object.values(soilCount));
-  });
+tbody.innerHTML+=`
+<tr>
+<td>${time}</td><td>${temp}</td><td>${hum}</td>
+<td>${l}</td><td>${s}</td>
+<td><a href="${img}" target="_blank">View</a></td>
+<td>${dis}</td><td>${act}</td>
+</tr>`;
+});
 
-function createLineChart(id, labels, data, label) {
-  new Chart(document.getElementById(id), {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label,
-        data,
-        borderWidth: 2,
-        fill: false
-      }]
-    }
-  });
+destroyCharts();
+charts.push(area("tempChart",labels,temps,"Temp",varColor("--green")));
+charts.push(area("humChart",labels,hums,"Humidity",varColor("--blue")));
+charts.push(dualLine("tempHumChart",labels,temps,hums));
+charts.push(area("soilTimeChart",labels,soilSeries,"Soil (1=WET)",varColor("--green")));
+charts.push(pie("lightChart",light));
+charts.push(pie("soilChart",soil));
+charts.push(bar("actionChart",actions));
+charts.push(bar("diseaseChart",diseases));
+});
 }
 
-function createPieChart(id, labels, data) {
-  new Chart(document.getElementById(id), {
-    type: "pie",
-    data: {
-      labels,
-      datasets: [{
-        data
-      }]
-    }
-  });
+function varColor(v){return getComputedStyle(document.documentElement).getPropertyValue(v);}
+
+function area(id,l,d,label,c){
+return new Chart(document.getElementById(id),{
+type:"line",
+data:{labels:l,datasets:[{data:d,fill:true,tension:.4,borderColor:c,backgroundColor:c+"33",pointRadius:0}]},
+options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"#1e293b"}}}}
+});
 }
+
+function dualLine(id,l,t,h){
+return new Chart(document.getElementById(id),{
+type:"line",
+data:{labels:l,datasets:[
+{data:t,borderColor:varColor("--green"),tension:.4,pointRadius:0},
+{data:h,borderColor:varColor("--blue"),tension:.4,pointRadius:0}
+]},
+options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"#1e293b"}}}}
+});
+}
+
+function pie(id,o){
+return new Chart(document.getElementById(id),{
+type:"doughnut",
+data:{labels:Object.keys(o),datasets:[{data:Object.values(o),backgroundColor:[varColor("--red"),varColor("--green")]}]}
+});
+}
+
+function bar(id,o){
+return new Chart(document.getElementById(id),{
+type:"bar",
+data:{labels:Object.keys(o),datasets:[{data:Object.values(o),backgroundColor:varColor("--blue")}]},
+options:{plugins:{legend:{display:false}}}
+});
+}
+
+fetchData();
+setInterval(fetchData,REFRESH);
 </script>
 
 </body>
+
 </html>

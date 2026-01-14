@@ -91,7 +91,7 @@ a{color:var(--blue);text-decoration:none;}
 <thead>
 <tr>
 <th>Time</th><th>T</th><th>H</th><th>Light</th><th>Soil</th>
-<th>Img</th><th>Disease</th><th>Action</th>
+<th>Img</th><th>Disease</th><th>Action</th><th>Plant Name</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -132,6 +132,7 @@ const s=r.c[4]?.v;
 const img=r.c[5]?.v;
 const dis=r.c[6]?.v;
 const act=r.c[8]?.v||"None";
+const plant=r.c[9]?.v||"None";
 
 labels.push(time);
 temps.push(temp);
@@ -148,7 +149,7 @@ tbody.innerHTML+=`
 <td>${time}</td><td>${temp}</td><td>${hum}</td>
 <td>${l}</td><td>${s}</td>
 <td><a href="${img}" target="_blank">View</a></td>
-<td>${dis}</td><td>${act}</td>
+<td>${dis}</td><td>${act}</td><td>${plant}</td>
 </tr>`;
 });
 

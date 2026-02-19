@@ -129,7 +129,7 @@ class Camera:
 
 
 class WebCamera:
-    DEVICE_INDEX = 1
+    MAX_DEVICE_INDEX = 5
     MAX_WAIT_SECONDS = 10
     FRAME_WIDTH = 640
     FRAME_HEIGHT = 480
@@ -142,8 +142,65 @@ class WebCamera:
         return gray.mean() < mean_thresh or gray.std() < std_thresh
 
     @staticmethod
+    def find_camera_index():
+        """
+        Auto-detect the first available camera device index.
+
+        Strategy:
+          1. On Linux (Raspberry Pi): scan /dev/video* to collect candidate indices.
+          2. Fallback: try indices 0 .. MAX_DEVICE_INDEX sequentially.
+
+        Returns the integer index of the first working camera, or None if not found.
+        """
+        import glob
+
+        candidates = []
+
+        # --- Strategy 1: enumerate /dev/video* on Linux ---
+        video_devices = sorted(glob.glob("/dev/video*"))
+        for dev in video_devices:
+            try:
+                idx = int(dev.replace("/dev/video", ""))
+                candidates.append(idx)
+            except ValueError:
+                pass
+
+        # --- Strategy 2: fallback range if nothing found via /dev ---
+        if not candidates:
+            candidates = list(range(WebCamera.MAX_DEVICE_INDEX + 1))
+
+        print(f"[WebCamera] Scanning device indices: {candidates}")
+
+        for idx in candidates:
+            cap = cv2.VideoCapture(idx, cv2.CAP_V4L2)
+            if not cap.isOpened():
+                cap.release()
+                continue
+
+            # Try reading a test frame to confirm the device is usable
+            ret, frame = cap.read()
+            cap.release()
+
+            if ret and frame is not None:
+                print(
+                    f"[WebCamera] Found working camera at index {idx} (/dev/video{idx})")
+                return idx
+
+            print(
+                f"[WebCamera] Index {idx} opened but could not read a frame — skipping.")
+
+        print("[WebCamera] No working camera found.")
+        return None
+
+    @staticmethod
     def capture():
-        cap = cv2.VideoCapture(WebCamera.DEVICE_INDEX, cv2.CAP_V4L2)
+        device_index = WebCamera.find_camera_index()
+
+        if device_index is None:
+            print("[WebCamera] ERROR: No camera device detected. Capture aborted.")
+            return False
+
+        cap = cv2.VideoCapture(device_index, cv2.CAP_V4L2)
 
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,  WebCamera.FRAME_WIDTH)
@@ -151,6 +208,8 @@ class WebCamera:
 
         if not cap.isOpened():
             cap.release()
+            print(
+                f"[WebCamera] ERROR: Could not reopen camera at index {device_index}.")
             return False
 
         time.sleep(2)

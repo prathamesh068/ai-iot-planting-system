@@ -24,9 +24,19 @@ cd ai-iot-planting-system
 
 ### 2. Create a virtual environment
 
+**On Windows / Linux (development):**
+
 ```bash
 python3 -m venv .venv
 ```
+
+**On Raspberry Pi:**
+
+```bash
+python3 -m venv venv --system-site-packages
+```
+
+> **Note:** The `--system-site-packages` flag is required on Raspberry Pi because `opencv-python` (and `numpy`) are installed at the **system level** via `apt` (`libopencv-dev`, `python3-opencv`) and are not available inside a standard isolated venv. This flag allows the venv to access those system-installed packages.
 
 ### 3. Activate the virtual environment
 
@@ -36,10 +46,16 @@ python3 -m venv .venv
 .venv\Scripts\activate
 ```
 
-**Linux / macOS / Raspberry Pi:**
+**Linux / macOS:**
 
 ```bash
 source .venv/bin/activate
+```
+
+**Raspberry Pi:**
+
+```bash
+source venv/bin/activate
 ```
 
 ### 4. Install dependencies

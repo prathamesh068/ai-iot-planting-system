@@ -159,7 +159,7 @@ class SensorManager:
                         "DHT11", f"Read OK — Temp={temp}°C  Humidity={hum}%")
                     return temp, hum
                 raise RuntimeError("Sensor returned None values")
-            except RuntimeError as exc:
+            except Exception as exc:
                 log.warning(
                     "DHT11",
                     f"Attempt {attempt}/{max_retries} failed — {exc}"

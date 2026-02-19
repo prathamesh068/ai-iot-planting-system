@@ -5,7 +5,6 @@ import datetime
 import subprocess
 import atexit
 import argparse
-import numpy as np
 import board
 import adafruit_dht
 import RPi.GPIO as GPIO

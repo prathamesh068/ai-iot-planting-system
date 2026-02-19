@@ -96,7 +96,7 @@ class SensorManager:
 
     def read_soil(self):
         """
-        Read all 5 soil moisture sensors.
+        Read all soil moisture sensors (any number).
 
         Returns:
             summary  (str) – e.g. "3/5 DRY"  (used for logging & AI prompt)
@@ -361,8 +361,9 @@ Return ONLY valid JSON:
 
 # ===================== ACTUATORS =====================
 class ActuatorController:
-    def __init__(self, gpio: GPIOManager):
+    def __init__(self, gpio: GPIOManager, pump_duration: int = 5):
         self.gpio = gpio
+        self.pump_duration = pump_duration
 
     def apply(self, ai_result, temp, soil_majority):
         actions = []
@@ -376,9 +377,9 @@ class ActuatorController:
 
         if rec["water_plant"] and soil_majority == "DRY":
             self.gpio.pump_on()
-            time.sleep(5)
+            time.sleep(self.pump_duration)
             self.gpio.pump_off()
-            actions.append("Watered")
+            actions.append(f"Watered ({self.pump_duration}s)")
 
         return ", ".join(actions) or "None"
 
@@ -404,7 +405,8 @@ class SmartPlantSystem:
         self.webcamera = WebCamera()
         self.google = GoogleServices()
         self.ai = PlantAI()
-        self.actuators = ActuatorController(self.gpio)
+        self.actuators = ActuatorController(
+            self.gpio, pump_duration=args.pump_duration)
 
     def run(self):
         # Capture image
@@ -455,31 +457,36 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--dht-pin", type=int, default=4,
+        "--dht-pin", type=int, default=7,
         help="BCM pin number for DHT11 temperature/humidity sensor"
     )
     parser.add_argument(
-        "--ldr-pin", type=int, default=17,
+        "--ldr-pin", type=int, default=38,
         help="BCM pin number for LDR light sensor"
     )
     parser.add_argument(
-        "--soil-pins", type=int, nargs=5,
-        default=[27, 28, 29, 30, 31],
-        metavar=("S1", "S2", "S3", "S4", "S5"),
-        help="BCM pin numbers for the 5 soil moisture sensors"
+        "--soil-pins", type=int, nargs="+",
+        default=[29, 31, 33, 35, 37, 40],
+        metavar="PIN",
+        help="BCM pin numbers for soil moisture sensors (any number, e.g. --soil-pins 27 28 29)"
     )
     parser.add_argument(
-        "--fan-pin", type=int, default=22,
+        "--fan-pin", type=int, default=13,
         help="BCM pin number for fan relay"
     )
     parser.add_argument(
-        "--pump-pin", type=int, default=23,
+        "--pump-pin", type=int, default=11,
         help="BCM pin number for water pump relay"
+    )
+    parser.add_argument(
+        "--pump-duration", type=int, default=5,
+        help="Number of seconds the water pump stays ON when watering"
     )
 
     args = parser.parse_args()
 
     print(f"[CONFIG] DHT={args.dht_pin} | LDR={args.ldr_pin} | "
-          f"Soil={args.soil_pins} | Fan={args.fan_pin} | Pump={args.pump_pin}")
+          f"Soil={args.soil_pins} | Fan={args.fan_pin} | "
+          f"Pump={args.pump_pin} | PumpDuration={args.pump_duration}s")
 
     SmartPlantSystem(args).run()

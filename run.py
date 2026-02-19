@@ -38,6 +38,65 @@ SCOPES = [
 genai.configure(api_key=GEMINI_API_KEY)
 
 
+# ===================== LOGGER =====================
+class Logger:
+    """
+    Colourful ANSI terminal logger — zero external dependencies.
+    Works on Raspberry Pi terminal and SSH sessions.
+    """
+
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+
+    _LEVELS = {
+        "INFO": ("\033[96m",  "INFO   "),   # cyan
+        "SUCCESS": ("\033[92m",  "SUCCESS"),   # bright green
+        "WARNING": ("\033[93m",  "WARNING"),   # yellow
+        "ERROR": ("\033[91m",  "ERROR  "),   # bright red
+        "DEBUG": ("\033[2m",   "DEBUG  "),   # dim white
+    }
+
+    def _log(self, level: str, module: str, msg: str) -> None:
+        colour, label = self._LEVELS[level]
+        ts = datetime.datetime.now().strftime("%H:%M:%S")
+        prefix = (
+            f"{self.DIM}[{ts}]{self.RESET} "
+            f"{colour}{self.BOLD}[{label}]{self.RESET} "
+            f"\033[96m[{module:<12}]{self.RESET}"
+        )
+        print(f"{prefix} {msg}", flush=True)
+
+    def info(self, module: str,
+             msg: str) -> None: self._log("INFO",    module, msg)
+
+    def success(self, module: str,
+                msg: str) -> None: self._log("SUCCESS", module, msg)
+
+    def warning(self, module: str,
+                msg: str) -> None: self._log("WARNING", module, msg)
+
+    def error(self, module: str,
+              msg: str) -> None: self._log("ERROR",   module, msg)
+
+    def debug(self, module: str,
+              msg: str) -> None: self._log("DEBUG",   module, msg)
+
+    def section(self, title: str) -> None:
+        bar = "\u2550" * (len(title) + 4)
+        print(
+            f"\n{self.BOLD}\033[94m"
+            f"\u2554{bar}\u2557\n"
+            f"\u2551  {title}  \u2551\n"
+            f"\u255a{bar}\u255d"
+            f"{self.RESET}\n",
+            flush=True
+        )
+
+
+log = Logger()
+
+
 # ===================== GPIO MANAGER =====================
 class GPIOManager:
     def __init__(self, ldr_pin: int, soil_pins: list, fan_pin: int, pump_pin: int):
@@ -85,11 +144,38 @@ class SensorManager:
         self.ldr_pin = ldr_pin
         self.soil_pins = soil_pins
 
-    def read_dht(self):
-        try:
-            return self.dht.temperature, self.dht.humidity
-        except RuntimeError:
-            return None, None
+    def read_dht(self, max_retries: int = 5, retry_delay: float = 2.0):
+        """
+        Read DHT11 with automatic retries.
+        Calls dht.exit() between attempts to release the POSIX message queue
+        and avoid the 'Lost access to message queue' error.
+        """
+        for attempt in range(1, max_retries + 1):
+            try:
+                temp = self.dht.temperature
+                hum = self.dht.humidity
+                if temp is not None and hum is not None:
+                    log.success(
+                        "DHT11", f"Read OK — Temp={temp}°C  Humidity={hum}%")
+                    return temp, hum
+                raise RuntimeError("Sensor returned None values")
+            except RuntimeError as exc:
+                log.warning(
+                    "DHT11",
+                    f"Attempt {attempt}/{max_retries} failed — {exc}"
+                )
+                # Release the message queue before retrying
+                try:
+                    self.dht.exit()
+                except Exception:
+                    pass
+                if attempt < max_retries:
+                    log.debug("DHT11", f"Retrying in {retry_delay}s …")
+                    time.sleep(retry_delay)
+
+        log.error(
+            "DHT11", f"All {max_retries} read attempts failed. Check wiring / pin assignment.")
+        return None, None
 
     def read_light(self):
         return "DARK" if GPIO.input(self.ldr_pin) == 1 else "BRIGHT"
@@ -169,7 +255,7 @@ class WebCamera:
         if not candidates:
             candidates = list(range(WebCamera.MAX_DEVICE_INDEX + 1))
 
-        print(f"[WebCamera] Scanning device indices: {candidates}")
+        log.info("WebCamera", f"Scanning device indices: {candidates}")
 
         for idx in candidates:
             cap = cv2.VideoCapture(idx, cv2.CAP_V4L2)
@@ -182,14 +268,14 @@ class WebCamera:
             cap.release()
 
             if ret and frame is not None:
-                print(
-                    f"[WebCamera] Found working camera at index {idx} (/dev/video{idx})")
+                log.success(
+                    "WebCamera", f"Found working camera at index {idx} (/dev/video{idx})")
                 return idx
 
-            print(
-                f"[WebCamera] Index {idx} opened but could not read a frame — skipping.")
+            log.warning(
+                "WebCamera", f"Index {idx} opened but could not read a frame — skipping")
 
-        print("[WebCamera] No working camera found.")
+        log.error("WebCamera", "No working camera found")
         return None
 
     @staticmethod
@@ -197,7 +283,7 @@ class WebCamera:
         device_index = WebCamera.find_camera_index()
 
         if device_index is None:
-            print("[WebCamera] ERROR: No camera device detected. Capture aborted.")
+            log.error("WebCamera", "No camera device detected — capture aborted")
             return False
 
         cap = cv2.VideoCapture(device_index, cv2.CAP_V4L2)
@@ -208,8 +294,8 @@ class WebCamera:
 
         if not cap.isOpened():
             cap.release()
-            print(
-                f"[WebCamera] ERROR: Could not reopen camera at index {device_index}.")
+            log.error(
+                "WebCamera", f"Could not reopen camera at index {device_index}")
             return False
 
         time.sleep(2)
@@ -343,13 +429,13 @@ Return ONLY valid JSON:
                 content,
                 request_options={"timeout": 30}
             )
-            print(response.text)
+            log.debug("Gemini", response.text)
             response_md = f"```json\n{response.text.strip()}\n```"
             text = response.text.replace(
                 "```json", "").replace("```", "").strip()
             return json.loads(text), prompt_text, response_md
         except Exception as e:
-            print(e)
+            log.error("Gemini", f"API error — {e}")
             return {
                 "disease": "unknown",
                 "plant": "Unknown",
@@ -412,25 +498,47 @@ class SmartPlantSystem:
             self.gpio, pump_duration=args.pump_duration)
 
     def run(self):
+        log.section("Smart Plant System — Cycle Start")
+
         # Capture image
+        log.info("WebCamera", "Capturing image …")
         if not self.webcamera.capture():
-            print("WebCam Initialisation failed")
+            log.error(
+                "WebCamera", "Initialisation failed — no valid frame captured. Aborting cycle.")
             return
+        log.success("WebCamera", f"Image saved → {IMAGE_PATH}")
 
         # Read sensors
+        log.info("Sensors", "Reading DHT11 …")
         temp, hum = self.sensors.read_dht()
         if temp is None:
-            print("DHT11 read failed")
+            log.error(
+                "Sensors", "DHT11 read failed after all retries — aborting cycle.")
             return
 
         light = self.sensors.read_light()
         soil_summary, soil_majority = self.sensors.read_soil()
+        log.info(
+            "Sensors", f"Temp={temp}°C | Hum={hum}% | Light={light} | Soil={soil_summary}")
 
-        # Upload & analyse
+        # Upload image
+        log.info("Drive", "Uploading image to Google Drive …")
         image_url = self.google.upload_image(IMAGE_PATH)
+        log.success("Drive", f"Uploaded → {image_url}")
+
+        # AI analysis
+        log.info("Gemini", "Sending data to Gemini for analysis …")
         ai_result, prompt_md, response_md = self.ai.analyze(
             temp, hum, light, soil_summary)
+        log.success(
+            "Gemini",
+            f"Plant={ai_result['plant']} | Disease={ai_result['disease']} | "
+            f"Confidence={ai_result['confidence']}"
+        )
+
+        # Actuators
         actions = self.actuators.apply(ai_result, temp, soil_majority)
+        log.info("Actuators", f"Actions applied: {actions}")
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -451,10 +559,11 @@ class SmartPlantSystem:
             response_md
         ]
 
+        # Log to sheet
+        log.info("Sheets", "Writing row to Google Sheets …")
         self.google.log_to_sheet(row)
-
-        print("Logged successfully")
-        print(row)
+        log.success("Sheets", "Row logged successfully ✓")
+        log.debug("Sheets", str(row))
 
 
 # ===================== ENTRY =====================
@@ -493,8 +602,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(f"[CONFIG] DHT={args.dht_pin} | LDR={args.ldr_pin} | "
-          f"Soil={args.soil_pins} | Fan={args.fan_pin} | "
-          f"Pump={args.pump_pin} | PumpDuration={args.pump_duration}s")
+    log.section("AI + IoT Smart Plant System")
+    log.info("CONFIG", f"DHT pin    = {args.dht_pin}")
+    log.info("CONFIG", f"LDR pin    = {args.ldr_pin}")
+    log.info("CONFIG", f"Soil pins  = {args.soil_pins}")
+    log.info("CONFIG", f"Fan pin    = {args.fan_pin}")
+    log.info("CONFIG", f"Pump pin   = {args.pump_pin}")
+    log.info("CONFIG", f"Pump dur   = {args.pump_duration}s")
 
     SmartPlantSystem(args).run()

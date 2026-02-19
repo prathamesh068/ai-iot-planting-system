@@ -114,8 +114,8 @@ class GPIOManager:
         GPIO.setup(self.fan_pin,  GPIO.OUT)
         GPIO.setup(self.pump_pin, GPIO.OUT)
 
-        GPIO.output(self.fan_pin,  GPIO.HIGH)
-        GPIO.output(self.pump_pin, GPIO.HIGH)
+        GPIO.output(self.fan_pin,  GPIO.LOW)
+        GPIO.output(self.pump_pin, GPIO.LOW)
 
         atexit.register(self.cleanup)
 

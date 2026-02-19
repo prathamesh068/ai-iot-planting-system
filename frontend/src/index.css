@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── JSON syntax highlighting (used in AIAnalysisCard pre blocks) ── */
+.key  { color: #7dd3fc; }
+.str  { color: #86efac; }
+.num  { color: #fbbf24; }
+.bool { color: #f472b6; }
+
+body {
+  margin: 0;
+  padding: 0
+}
+/* ── Custom scrollbar for pre blocks ── */
+pre {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+pre::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+pre::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+/* ── Recharts tooltip ── */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* ── Snippet cell in table ── */
+.snip {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  cursor: pointer;
+}

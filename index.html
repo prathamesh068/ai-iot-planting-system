@@ -1,209 +1,404 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AI + IOT Smart Agriculture System</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI + IOT Smart Agriculture System</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-:root{
-  --bg:#020617;
-  --card:#020617;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --green:#22c55e;
-  --blue:#38bdf8;
-  --red:#f87171;
-}
-body{
-  margin:0;
-  font-family:system-ui;
-  background:var(--bg);
-  color:var(--text);
-  padding:12px;
-}
-h1{
-  text-align:center;
-  font-size:1.3rem;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:14px;
-}
-.card{
-  background:var(--card);
-  padding:14px;
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
-.card h3{
-  margin:0 0 8px;
-  font-size:.9rem;
-  color:var(--muted);
-}
-canvas{
-  width:100%!important;
-  height:260px!important;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:.75rem;
-}
-th,td{
-  padding:6px;
-  border-bottom:1px solid #1e293b;
-  text-align:center;
-}
-th{color:var(--green);}
-a{color:var(--blue);text-decoration:none;}
-.footer{
-  text-align:center;
-  font-size:.7rem;
-  margin-top:10px;
-  color:var(--muted);
-}
-</style>
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --blue: #38bdf8;
+      --red: #f87171;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui;
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.3rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 14px;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: .9rem;
+      color: var(--muted);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 260px !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .75rem;
+    }
+
+    th,
+    td {
+      padding: 6px;
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    th {
+      color: var(--green);
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: .7rem;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    /* ── AI Analysis Card ── */
+    .ai-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    @media(max-width:640px) {
+      .ai-panels {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ai-panel {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid #1e293b;
+    }
+
+    .ai-panel h4 {
+      margin: 0 0 8px;
+      font-size: .8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .ai-panel pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Fira Mono", "Cascadia Code", monospace;
+      font-size: .72rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+      max-height: 320px;
+      overflow-y: auto;
+      background: transparent;
+    }
+
+    .ai-panel pre .key {
+      color: #7dd3fc;
+    }
+
+    .ai-panel pre .str {
+      color: #86efac;
+    }
+
+    .ai-panel pre .num {
+      color: #fbbf24;
+    }
+
+    .ai-panel pre .bool {
+      color: #f472b6;
+    }
+
+    .ai-empty {
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .snip {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+      vertical-align: middle;
+      color: var(--muted);
+      font-size: .7rem;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>🌱 AI + IOT Smart Agriculture System</h1>
+  <h1>🌱 AI + IOT Smart Agriculture System</h1>
 
 
-<div class="grid">
-  <div class="card"><h3>Temperature (°C)</h3><canvas id="tempChart"></canvas></div>
-  <div class="card"><h3>Humidity (%)</h3><canvas id="humChart"></canvas></div>
-  <div class="card"><h3>Temp vs Humidity</h3><canvas id="tempHumChart"></canvas></div>
-  <div class="card"><h3>Soil Condition Over Time</h3><canvas id="soilTimeChart"></canvas></div>
-  <div class="card"><h3>Light Distribution</h3><canvas id="lightChart"></canvas></div>
-  <div class="card"><h3>Soil Distribution</h3><canvas id="soilChart"></canvas></div>
-  <div class="card"><h3>Actions Count</h3><canvas id="actionChart"></canvas></div>
-  <div class="card"><h3>Disease Count</h3><canvas id="diseaseChart"></canvas></div>
-</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Temperature (°C)</h3><canvas id="tempChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Humidity (%)</h3><canvas id="humChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Temp vs Humidity</h3><canvas id="tempHumChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Soil Condition Over Time</h3><canvas id="soilTimeChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Light Distribution</h3><canvas id="lightChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Soil Distribution</h3><canvas id="soilChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Actions Count</h3><canvas id="actionChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Disease Count</h3><canvas id="diseaseChart"></canvas>
+    </div>
+  </div>
 
-<div class="card" style="margin-top:14px;">
-<h3>Latest Readings</h3>
-<table>
-<thead>
-<tr>
-<th>Time</th><th>T</th><th>H</th><th>Light</th><th>Soil</th>
-<th>Img</th><th>Disease</th><th>Action</th><th>Plant Name</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-</div>
+  <div class="card" style="margin-top:14px;">
+    <h3>Latest Readings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>T</th>
+          <th>H</th>
+          <th>Light</th>
+          <th>Soil</th>
+          <th>Img</th>
+          <th>Disease</th>
+          <th>Action</th>
+          <th>Plant Name</th>
+          <th>Prompt</th>
+          <th>AI Response</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
-<div class="footer">Auto refresh every 60 seconds</div>
-<div class="footer"><h5> Made with ❤️ by Prathamesh </h5></div>
-<script>
-const SHEET_ID="1ns-4EP_eRR5WDlHlKTnPc-MXrRrKl_TP4LNPajDsb-0";
-const SHEET_NAME="plant_readings";
-const REFRESH=60000;
-let charts=[];
+  <!-- ── Latest Gemini AI Analysis ── -->
+  <div class="card" id="aiCard" style="margin-top:14px;display:none;">
+    <h3>🤖 Latest Gemini AI Analysis</h3>
+    <div class="ai-panels">
+      <div class="ai-panel">
+        <h4>📤 Prompt sent to Gemini</h4>
+        <pre id="aiPrompt"></pre>
+      </div>
+      <div class="ai-panel">
+        <h4>📥 Response from Gemini</h4>
+        <pre id="aiResponse"></pre>
+      </div>
+    </div>
+  </div>
 
-function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+  <div class="footer">Auto refresh every 60 seconds</div>
+  <div class="footer">
+    <h5> Made with ❤️ by Prathamesh </h5>
+  </div>
+  <script>
+    const SHEET_ID = "1ns-4EP_eRR5WDlHlKTnPc-MXrRrKl_TP4LNPajDsb-0";
+    const SHEET_NAME = "plant_readings";
+    const REFRESH = 60000;
+    let charts = [];
 
-function fetchData(){
-fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}&t=${Date.now()}`)
-.then(r=>r.text())
-.then(t=>{
-const rows=JSON.parse(t.substring(47).slice(0,-2)).table.rows.slice(-20);
+    function destroyCharts() { charts.forEach(c => c.destroy()); charts = []; }
 
-let labels=[],temps=[],hums=[],soilSeries=[];
-let light={DARK:0,BRIGHT:0};
-let soil={DRY:0,WET:0};
-let actions={"None":0,"Fan ON":0,"Watered":0};
-let diseases={};
+    function fetchData() {
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}&t=${Date.now()}`)
+        .then(r => r.text())
+        .then(t => {
+          const rows = JSON.parse(t.substring(47).slice(0, -2)).table.rows.slice(-20);
 
-const tbody=document.getElementById("tableBody");
-tbody.innerHTML="";
+          let labels = [], temps = [], hums = [], soilSeries = [];
+          let light = { DARK: 0, BRIGHT: 0 };
+          let soil = { DRY: 0, WET: 0 };
+          let actions = { "None": 0, "Fan ON": 0, "Watered": 0 };
+          let diseases = {};
 
-rows.forEach(r=>{
-const time=r.c[0]?.v;
-const temp=r.c[1]?.v;
-const hum=r.c[2]?.v;
-const l=r.c[3]?.v;
-const s=r.c[4]?.v;
-const img=r.c[5]?.v;
-const dis=r.c[6]?.v;
-const act=r.c[8]?.v||"None";
-const plant=r.c[9]?.v||"None";
+          const tbody = document.getElementById("tableBody");
+          tbody.innerHTML = "";
 
-labels.push(time);
-temps.push(temp);
-hums.push(hum);
-soilSeries.push(s==="WET"?1:0);
+          let latestPrompt = null, latestResponse = null;
 
-if(l) light[l]++;
-if(s) soil[s]++;
-actions[act]=(actions[act]||0)+1;
-diseases[dis]=(diseases[dis]||0)+1;
+          rows.forEach(r => {
+            const time = r.c[0]?.v;
+            const temp = r.c[1]?.v;
+            const hum = r.c[2]?.v;
+            const l = r.c[3]?.v;
+            const s = r.c[4]?.v;
+            const img = r.c[5]?.v;
+            const dis = r.c[6]?.v;
+            const act = r.c[8]?.v || "None";
+            const plant = r.c[9]?.v || "None";
+            const prompt = r.c[10]?.v || null;
+            const resp = r.c[11]?.v || null;
 
-tbody.innerHTML+=`
+            if (prompt) latestPrompt = prompt;
+            if (resp) latestResponse = resp;
+
+            labels.push(time);
+            temps.push(temp);
+            hums.push(hum);
+            soilSeries.push(s === "WET" ? 1 : 0);
+
+            if (l) light[l]++;
+            if (s) soil[s]++;
+            actions[act] = (actions[act] || 0) + 1;
+            diseases[dis] = (diseases[dis] || 0) + 1;
+
+            const promptSnip = prompt
+              ? `<span class="snip" title="${escHtml(prompt)}">${escHtml(prompt.slice(0, 50))}…</span>`
+              : `<span style="color:#475569">—</span>`;
+            const respSnip = resp
+              ? `<span class="snip" title="${escHtml(resp)}">${escHtml(resp.slice(0, 50))}…</span>`
+              : `<span style="color:#475569">—</span>`;
+
+            tbody.innerHTML += `
 <tr>
 <td>${time}</td><td>${temp}</td><td>${hum}</td>
 <td>${l}</td><td>${s}</td>
 <td><a href="${img}" target="_blank">View</a></td>
 <td>${dis}</td><td>${act}</td><td>${plant}</td>
+<td>${promptSnip}</td><td>${respSnip}</td>
 </tr>`;
-});
+          });
 
-destroyCharts();
-charts.push(area("tempChart",labels,temps,"Temp",varColor("--green")));
-charts.push(area("humChart",labels,hums,"Humidity",varColor("--blue")));
-charts.push(dualLine("tempHumChart",labels,temps,hums));
-charts.push(area("soilTimeChart",labels,soilSeries,"Soil (1=WET)",varColor("--green")));
-charts.push(pie("lightChart",light));
-charts.push(pie("soilChart",soil));
-charts.push(bar("actionChart",actions));
-charts.push(bar("diseaseChart",diseases));
-});
-}
+          // ── Populate AI Analysis card ──
+          const aiCard = document.getElementById("aiCard");
+          if (latestPrompt || latestResponse) {
+            aiCard.style.display = "block";
+            document.getElementById("aiPrompt").textContent = latestPrompt || "(no prompt data)";
+            document.getElementById("aiResponse").innerHTML = latestResponse
+              ? syntaxHighlightJson(latestResponse)
+              : "(no response data)";
+          } else {
+            aiCard.style.display = "none";
+          }
 
-function varColor(v){return getComputedStyle(document.documentElement).getPropertyValue(v);}
+          destroyCharts();
+          charts.push(area("tempChart", labels, temps, "Temp", varColor("--green")));
+          charts.push(area("humChart", labels, hums, "Humidity", varColor("--blue")));
+          charts.push(dualLine("tempHumChart", labels, temps, hums));
+          charts.push(area("soilTimeChart", labels, soilSeries, "Soil (1=WET)", varColor("--green")));
+          charts.push(pie("lightChart", light));
+          charts.push(pie("soilChart", soil));
+          charts.push(bar("actionChart", actions));
+          charts.push(bar("diseaseChart", diseases));
+        });
+    }
 
-function area(id,l,d,label,c){
-return new Chart(document.getElementById(id),{
-type:"line",
-data:{labels:l,datasets:[{data:d,fill:true,tension:.4,borderColor:c,backgroundColor:c+"33",pointRadius:0}]},
-options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"#1e293b"}}}}
-});
-}
+    function escHtml(s) {
+      // Build entity strings at runtime to prevent tool HTML-entity decoding
+      return String(s)
+        .replace(/&/g, '&' + 'amp;')
+        .replace(/</g, '&' + 'lt;')
+        .replace(/>/g, '&' + 'gt;')
+        .replace(/"/g, '&' + 'quot;');
+    }
 
-function dualLine(id,l,t,h){
-return new Chart(document.getElementById(id),{
-type:"line",
-data:{labels:l,datasets:[
-{data:t,borderColor:varColor("--green"),tension:.4,pointRadius:0},
-{data:h,borderColor:varColor("--blue"),tension:.4,pointRadius:0}
-]},
-options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"#1e293b"}}}}
-});
-}
+    function syntaxHighlightJson(raw) {
+      // Strip markdown code fences if present
+      let text = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/, "").trim();
+      // Try to pretty-print
+      try { text = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { }
+      // Syntax colour
+      return escHtml(text).replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function (m) {
+          if (/^"/.test(m)) {
+            return /:$/.test(m)
+              ? `<span class="key">${m}</span>`
+              : `<span class="str">${m}</span>`;
+          }
+          if (/true|false/.test(m)) return `<span class="bool">${m}</span>`;
+          if (/null/.test(m)) return `<span class="bool">${m}</span>`;
+          return `<span class="num">${m}</span>`;
+        }
+      );
+    }
 
-function pie(id,o){
-return new Chart(document.getElementById(id),{
-type:"doughnut",
-data:{labels:Object.keys(o),datasets:[{data:Object.values(o),backgroundColor:[varColor("--red"),varColor("--green")]}]}
-});
-}
+    function varColor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v); }
 
-function bar(id,o){
-return new Chart(document.getElementById(id),{
-type:"bar",
-data:{labels:Object.keys(o),datasets:[{data:Object.values(o),backgroundColor:varColor("--blue")}]},
-options:{plugins:{legend:{display:false}}}
-});
-}
+    function area(id, l, d, label, c) {
+      return new Chart(document.getElementById(id), {
+        type: "line",
+        data: { labels: l, datasets: [{ data: d, fill: true, tension: .4, borderColor: c, backgroundColor: c + "33", pointRadius: 0 }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: "#1e293b" } } } }
+      });
+    }
 
-fetchData();
-setInterval(fetchData,REFRESH);
-</script>
+    function dualLine(id, l, t, h) {
+      return new Chart(document.getElementById(id), {
+        type: "line",
+        data: {
+          labels: l, datasets: [
+            { data: t, borderColor: varColor("--green"), tension: .4, pointRadius: 0 },
+            { data: h, borderColor: varColor("--blue"), tension: .4, pointRadius: 0 }
+          ]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: "#1e293b" } } } }
+      });
+    }
+
+    function pie(id, o) {
+      return new Chart(document.getElementById(id), {
+        type: "doughnut",
+        data: { labels: Object.keys(o), datasets: [{ data: Object.values(o), backgroundColor: [varColor("--red"), varColor("--green")] }] }
+      });
+    }
+
+    function bar(id, o) {
+      return new Chart(document.getElementById(id), {
+        type: "bar",
+        data: { labels: Object.keys(o), datasets: [{ data: Object.values(o), backgroundColor: varColor("--blue") }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    fetchData();
+    setInterval(fetchData, REFRESH);
+  </script>
 
 </body>
 

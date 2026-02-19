@@ -61,23 +61,30 @@ export default function App() {
                     style={{
                         background: headerBg,
                         borderBottom: `1px solid ${borderCol}`,
-                        padding: '0 24px',
+                        padding: '0 16px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: 8,
+                        height: 'auto',
+                        minHeight: 64,
+                        lineHeight: 'normal',
                         position: 'sticky',
                         top: 0,
                         zIndex: 100,
                     }}
                 >
-                    <Space align="center" size={12}>
-                        <span style={{ fontSize: 24 }}>🌱</span>
-                        <Title level={5} style={{ margin: 0, color: isDark ? '#f1f5f9' : '#0f172a' }}>
+                    {/* Title row */}
+                    <Space align="center" size={10} style={{ paddingTop: 4, paddingBottom: 4 }}>
+                        <span style={{ fontSize: 22 }}>🌱</span>
+                        <Title level={5} style={{ margin: 0, color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 14 }}>
                             AI + IoT Smart Agriculture System
                         </Title>
                     </Space>
 
-                    <Space size={12}>
+                    {/* Controls row */}
+                    <Space size={10} style={{ paddingTop: 4, paddingBottom: 4 }}>
                         <Badge
                             status="processing"
                             color="#22c55e"

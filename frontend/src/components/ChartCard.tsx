@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import type { AreaPoint, DualPoint, PiePoint, BarPoint } from '../utils/chartConfig';
 import { COLORS, PIE_COLORS_LIGHT } from '../utils/chartConfig';
+import { formatDateShort } from '../utils/htmlHelpers';
 
 // ── Shared axis / grid colours per theme ──────────────────────────────────
 const axisColor = (dark: boolean) => dark ? '#475569' : '#94a3b8';
@@ -46,6 +47,7 @@ export default function ChartCard(props: Props) {
         axisLine: { stroke: ac },
         tickLine: false,
         interval: 'preserveStartEnd' as const,
+        tickFormatter: formatDateShort,
     };
 
     const yAxisProps = {

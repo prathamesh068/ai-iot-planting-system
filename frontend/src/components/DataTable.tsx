@@ -1,6 +1,7 @@
 import { Card, Table, Tag, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { SheetRow } from '../types';
+import { formatDateFull } from '../utils/htmlHelpers';
 
 const { Link } = Typography;
 
@@ -19,10 +20,10 @@ export default function DataTable({ rows, isDark }: Props) {
             title: 'Time',
             dataIndex: 'time',
             key: 'time',
-            width: 130,
+            width: 120,
             fixed: 'left',
             render: (v: string) => (
-                <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{v || '—'}</span>
+                <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{formatDateFull(v)}</span>
             ),
         },
         {
@@ -163,7 +164,8 @@ export default function DataTable({ rows, isDark }: Props) {
         },
     ];
 
-    const dataSource: RowWithKey[] = rows.map((r, i) => ({ ...r, key: i }));
+    // Reverse so the latest reading appears first
+    const dataSource: RowWithKey[] = rows.slice().reverse().map((r, i) => ({ ...r, key: i }));
 
     return (
         <Card

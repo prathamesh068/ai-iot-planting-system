@@ -52,8 +52,33 @@ pip install -r requirements.txt
 
 **On Raspberry Pi (full hardware deployment):**
 
+First, install the required system-level packages via `apt`:
+
+```bash
+sudo apt update && sudo apt install -y \
+  python3-dev \
+  python3-pip \
+  python3-venv \
+  libgpiod-dev \
+  swig \
+  libatlas-base-dev \
+  libopencv-dev
+```
+
+> **Note:** `python3-dev` and `swig` are required to build `RPi.GPIO` and `lgpio` from source.  
+> `libatlas-base-dev` is needed for `numpy` on ARM.  
+> `libopencv-dev` is needed for `opencv-python` on ARM.
+
+Then install Python packages:
+
 ```bash
 pip install -r requirements.pi.txt
+```
+
+Alternatively, you can install the GPIO packages directly via `apt` (no build step needed):
+
+```bash
+sudo apt install -y python3-rpi.gpio python3-lgpio
 ```
 
 ---

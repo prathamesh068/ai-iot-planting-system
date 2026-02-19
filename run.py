@@ -500,6 +500,10 @@ class SmartPlantSystem:
     def run(self):
         log.section("Smart Plant System — Cycle Start")
 
+        # Reset actuators to off state
+        self.gpio.fan_off()
+        self.gpio.pump_off()
+
         # Capture image
         log.info("WebCamera", "Capturing image …")
         if not self.webcamera.capture():
@@ -511,10 +515,10 @@ class SmartPlantSystem:
         # Read sensors
         log.info("Sensors", "Reading DHT11 …")
         temp, hum = self.sensors.read_dht()
-        if temp is None:
-            log.error(
-                "Sensors", "DHT11 read failed after all retries — aborting cycle.")
-            return
+        if temp is None or hum is None:
+            log.warning("Sensors", "DHT11 read failed, using default values")
+            temp = 25.0
+            hum = 50.0
 
         light = self.sensors.read_light()
         soil_summary, soil_majority = self.sensors.read_soil()

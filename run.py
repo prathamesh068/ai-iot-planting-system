@@ -120,16 +120,16 @@ class GPIOManager:
         atexit.register(self.cleanup)
 
     def fan_on(self):
-        GPIO.output(self.fan_pin, GPIO.LOW)
-
-    def fan_off(self):
         GPIO.output(self.fan_pin, GPIO.HIGH)
 
+    def fan_off(self):
+        GPIO.output(self.fan_pin, GPIO.LOW)
+
     def pump_on(self):
-        GPIO.output(self.pump_pin, GPIO.LOW)
+        GPIO.output(self.pump_pin, GPIO.HIGH)
 
     def pump_off(self):
-        GPIO.output(self.pump_pin, GPIO.HIGH)
+        GPIO.output(self.pump_pin, GPIO.LOW)
 
     def cleanup(self):
         GPIO.output(self.fan_pin,  GPIO.HIGH)

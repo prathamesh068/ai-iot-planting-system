@@ -326,13 +326,15 @@ Return ONLY valid JSON:
         with open(IMAGE_PATH, "rb") as f:
             image = f.read()
 
+        prompt_text = self.PROMPT.format(
+            temp=temp,
+            humidity=humidity,
+            light=light,
+            soil=soil_summary
+        )
+
         content = [
-            self.PROMPT.format(
-                temp=temp,
-                humidity=humidity,
-                light=light,
-                soil=soil_summary
-            ),
+            prompt_text,
             {"mime_type": "image/jpeg", "data": image}
         ]
 
@@ -342,9 +344,10 @@ Return ONLY valid JSON:
                 request_options={"timeout": 30}
             )
             print(response.text)
+            response_md = f"```json\n{response.text.strip()}\n```"
             text = response.text.replace(
                 "```json", "").replace("```", "").strip()
-            return json.loads(text)
+            return json.loads(text), prompt_text, response_md
         except Exception as e:
             print(e)
             return {
@@ -356,7 +359,7 @@ Return ONLY valid JSON:
                     "water_plant": False,
                     "increase_airflow": False
                 }
-            }
+            }, prompt_text, f"```\nError: {e}\n```"
 
 
 # ===================== ACTUATORS =====================
@@ -425,7 +428,8 @@ class SmartPlantSystem:
 
         # Upload & analyse
         image_url = self.google.upload_image(IMAGE_PATH)
-        ai_result = self.ai.analyze(temp, hum, light, soil_summary)
+        ai_result, prompt_md, response_md = self.ai.analyze(
+            temp, hum, light, soil_summary)
         actions = self.actuators.apply(ai_result, temp, soil_majority)
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -440,7 +444,11 @@ class SmartPlantSystem:
             ai_result["disease"],
             ai_result["confidence"],
             actions,
-            ai_result["plant"]
+            ai_result["plant"],
+            # col K (index 10) — prompt sent to Gemini (markdown)
+            prompt_md,
+            # col L (index 11) — raw response from Gemini (markdown)
+            response_md
         ]
 
         self.google.log_to_sheet(row)
@@ -457,25 +465,25 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--dht-pin", type=int, default=7,
+        "--dht-pin", type=int, default=4,
         help="BCM pin number for DHT11 temperature/humidity sensor"
     )
     parser.add_argument(
-        "--ldr-pin", type=int, default=38,
+        "--ldr-pin", type=int, default=20,
         help="BCM pin number for LDR light sensor"
     )
     parser.add_argument(
         "--soil-pins", type=int, nargs="+",
-        default=[29, 31, 33, 35, 37, 40],
+        default=[5, 6, 13, 19, 26, 21],
         metavar="PIN",
         help="BCM pin numbers for soil moisture sensors (any number, e.g. --soil-pins 27 28 29)"
     )
     parser.add_argument(
-        "--fan-pin", type=int, default=13,
+        "--fan-pin", type=int, default=27,
         help="BCM pin number for fan relay"
     )
     parser.add_argument(
-        "--pump-pin", type=int, default=11,
+        "--pump-pin", type=int, default=17,
         help="BCM pin number for water pump relay"
     )
     parser.add_argument(

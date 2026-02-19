@@ -350,9 +350,10 @@ class GoogleServices:
 
     def upload_image(self, path):
         metadata = {
-            "name": f"plant_{int(time.time())}.jpg",
-            "parents": [DRIVE_FOLDER_ID]
+            "name": f"plant_{int(time.time())}.jpg"
         }
+        if DRIVE_FOLDER_ID:
+            metadata["parents"] = [DRIVE_FOLDER_ID]
         media = MediaFileUpload(path, mimetype="image/jpeg")
         file = self.drive.files().create(
             body=metadata, media_body=media, fields="id"

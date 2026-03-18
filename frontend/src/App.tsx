@@ -7,12 +7,13 @@ import {
     BulbOutlined, BulbFilled,
     ThunderboltOutlined, CloudOutlined,
     SunOutlined, ExperimentOutlined,
-    ReloadOutlined, ClockCircleOutlined,
+    ReloadOutlined, ClockCircleOutlined, TeamOutlined, BarChartOutlined,
 } from '@ant-design/icons';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import ChartCard from './components/ChartCard';
 import DataTable from './components/DataTable';
 import AIAnalysisCard from './components/AIAnalysisCard';
+import AboutPage from './components/AboutPage';
 import {
     areaData,
     tempHumidityHeatmapData,
@@ -27,6 +28,7 @@ const { Title, Text } = Typography;
 
 export default function App() {
     const [isDark, setIsDark] = useState(true);
+    const [page, setPage] = useState<'dashboard' | 'about'>('dashboard');
     const { data, loading, error, refetch } = useSupabaseData();
 
     const latestRow = data?.rows[data.rows.length - 1];
@@ -87,7 +89,46 @@ export default function App() {
                 >
                     {/* Title row */}
                     <Space align="center" size={10} style={{ paddingTop: 4, paddingBottom: 4 }}>
-                        <span style={{ fontSize: 22 }}>🌱</span>
+                        <div
+                            style={{
+                                position: 'relative',
+                                width: 28,
+                                height: 28,
+                                borderRadius: 10,
+                                background: isDark ? 'rgba(30, 41, 59, 0.55)' : 'rgba(255, 255, 255, 0.72)',
+                                border: `1px solid ${isDark ? 'rgba(148,163,184,0.24)' : 'rgba(148,163,184,0.4)'}`,
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    inset: -8,
+                                    background: isDark
+                                        ? 'radial-gradient(circle, rgba(34,197,94,0.35) 0%, rgba(56,189,248,0.18) 45%, transparent 75%)'
+                                        : 'radial-gradient(circle, rgba(34,197,94,0.25) 0%, rgba(56,189,248,0.2) 48%, transparent 75%)',
+                                    filter: 'blur(10px)',
+                                }}
+                            />
+                            <img
+                                src="/icon.png"
+                                alt="Project icon"
+                                style={{
+                                    width: 19,
+                                    height: 19,
+                                    objectFit: 'contain',
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    opacity: 0.95,
+                                    mixBlendMode: isDark ? 'screen' : 'multiply',
+                                }}
+                            />
+                        </div>
                         <Title level={5} style={{ margin: 0, color: isDark ? '#f1f5f9' : '#0f172a', fontSize: 14 }}>
                             AI + IoT Smart Agriculture System
                         </Title>
@@ -95,22 +136,35 @@ export default function App() {
 
                     {/* Controls row */}
                     <Space size={10} style={{ paddingTop: 4, paddingBottom: 4 }}>
-                        <Badge
-                            status="processing"
-                            color="#22c55e"
-                            text={
-                                <Text style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>
-                                    Live
-                                </Text>
-                            }
-                        />
+                        {page === 'dashboard' && (
+                            <Badge
+                                status="processing"
+                                color="#22c55e"
+                                text={
+                                    <Text style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>
+                                        Live
+                                    </Text>
+                                }
+                            />
+                        )}
+                        {page === 'dashboard' && (
+                            <Button
+                                size="small"
+                                icon={<ReloadOutlined />}
+                                onClick={() => void refetch()}
+                                type="text"
+                                style={{ color: isDark ? '#94a3b8' : '#64748b' }}
+                            />
+                        )}
                         <Button
                             size="small"
-                            icon={<ReloadOutlined />}
-                            onClick={() => void refetch()}
-                            type="text"
-                            style={{ color: isDark ? '#94a3b8' : '#64748b' }}
-                        />
+                            icon={page === 'about' ? <BarChartOutlined /> : <TeamOutlined />}
+                            onClick={() => setPage(page === 'about' ? 'dashboard' : 'about')}
+                            type={page === 'about' ? 'primary' : 'default'}
+                            style={{ borderRadius: 8, fontSize: 12 }}
+                        >
+                            {page === 'about' ? 'Dashboard' : 'About'}
+                        </Button>
                         <Switch
                             checked={isDark}
                             onChange={setIsDark}
@@ -121,15 +175,18 @@ export default function App() {
                 </Header>
 
                 {/* ── Content ── */}
-                <Content style={{ padding: '24px 20px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+                <Content style={{ padding: page === 'about' ? '0' : '24px 20px', maxWidth: page === 'about' ? '100%' : 1400, margin: '0 auto', width: '100%' }}>
 
-                    {loading && (
+                    {/* ── About Page ── */}
+                    {page === 'about' && <AboutPage isDark={isDark} />}
+
+                    {page === 'dashboard' && loading && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
                             <Spin size="large" tip="Loading sensor data…" />
                         </div>
                     )}
 
-                    {error && (
+                    {page === 'dashboard' && error && (
                         <Alert
                             type="error"
                             message="Data Fetch Error"
@@ -139,7 +196,7 @@ export default function App() {
                         />
                     )}
 
-                    {data && (
+                    {page === 'dashboard' && data && (
                         <>
                             {/* ── Stat Cards ── */}
                             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>

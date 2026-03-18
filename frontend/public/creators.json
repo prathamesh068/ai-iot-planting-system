@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Prathamesh Honalkar",
+    "rollNo": "Final Year",
+    "college": "ENTC",
+    "photo": "/pratham.png",
+    "about": "Worked on the complete electronics side of this project.",
+    "areas": [
+      "Electronics Architecture",
+      "Sensor Wiring",
+      "Actuator Integration",
+      "Hardware Deployment"
+    ]
+  },
+  {
+    "name": "Github Copilot",
+    "rollNo": "AI Coding Assistant",
+    "college": "Code + Python + Supabase Integration",
+    "photo": "/copilot.png",
+    "about": "Used for creating the website, integrating Supabase, and helping across coding and Python implementation.",
+    "areas": [
+      "Frontend Website Development",
+      "Supabase Integration",
+      "Python Backend Support",
+      "Code Implementation Assistance"
+    ]
+  }
+]

@@ -37,8 +37,8 @@ jobs:
             - name: Build
               working-directory: frontend
               env:
-                  VITE_SHEET_ID: ${{ secrets.VITE_SHEET_ID }}
-                  VITE_SHEET_NAME: ${{ secrets.VITE_SHEET_NAME }}
+                  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+                  VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
               run: pnpm build
 
             - name: Copy index.html → 404.html (SPA fallback)

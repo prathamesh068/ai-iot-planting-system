@@ -1,8 +1,10 @@
 # Adafruit / GPIO (RPi-specific packages included)
 Adafruit-Blinka
 adafruit-circuitpython-dht
-# Google APIs
-google-generativeai
-google-auth-oauthlib
+# AI and Data APIs
+google-genai==1.68.0
+supabase
+# Encryption
+cryptography
 # Environment
 python-dotenv

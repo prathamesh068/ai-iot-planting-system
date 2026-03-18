@@ -6,10 +6,11 @@ Adafruit-Blinka==8.69.0
 adafruit-circuitpython-dht==4.0.10
 
 # Google APIs
-google-generativeai==0.8.6
-google-api-python-client==2.190.0
-google-auth==2.48.0
-google-auth-oauthlib==1.2.4
+google-genai==1.68.0
+supabase==2.18.1
+
+# Encryption
+cryptography>=41.0.0
 
 # Computer Vision
 opencv-python==4.13.0.92

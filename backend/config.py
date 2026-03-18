@@ -8,18 +8,11 @@ from dotenv import load_dotenv
 @dataclass
 class Settings:
     image_path: str
-    drive_folder_id: str
-    spreadsheet_id: str
     gemini_api_key: str
-    token_path: str
-    credentials_path: str
+    supabase_url: str
+    supabase_service_role_key: str
+    supabase_storage_bucket: str
     mock: bool
-
-
-SCOPES = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets",
-]
 
 
 def _to_bool(value: Optional[str]) -> bool:
@@ -35,10 +28,9 @@ def load_settings(mock_override: Optional[bool] = None) -> Settings:
 
     return Settings(
         image_path=os.environ.get("IMAGE_PATH", "plant.jpg"),
-        drive_folder_id=os.environ.get("DRIVE_FOLDER_ID", ""),
-        spreadsheet_id=os.environ.get("SPREADSHEET_ID", ""),
         gemini_api_key=os.environ.get("GEMINI_API_KEY", ""),
-        token_path=os.environ.get("TOKEN_PATH", "token.json"),
-        credentials_path=os.environ.get("CREDENTIALS_PATH", "credentials.json"),
+        supabase_url=os.environ.get("SUPABASE_URL", ""),
+        supabase_service_role_key=os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ""),
+        supabase_storage_bucket=os.environ.get("SUPABASE_STORAGE_BUCKET", "plant-images"),
         mock=mock_value,
     )

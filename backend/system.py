@@ -15,7 +15,7 @@ class SmartPlantSystem:
         self.gpio = services["gpio"]
         self.sensors = services["sensors"]
         self.camera = services["camera"]
-        self.google = services["google"]
+        self.storage = services["storage"]
         self.ai = services["ai"]
 
         self.actuators = ActuatorController(self.gpio, pump_duration=args.pump_duration)
@@ -33,20 +33,25 @@ class SmartPlantSystem:
         self.log.success("Camera", f"Image saved to {self.settings.image_path}")
 
         self.log.info("Sensors", "Reading sensors")
-        temp, hum = self.sensors.read_dht()
+        temp_readings, hum_readings = self.sensors.read_dht()
+        valid_temps = [t for t in temp_readings if t is not None]
+        valid_hums = [h for h in hum_readings if h is not None]
+        temp = round(sum(valid_temps) / len(valid_temps), 1) if valid_temps else None
+        hum = round(sum(valid_hums) / len(valid_hums), 1) if valid_hums else None
         if temp is None or hum is None:
             self.log.warning("Sensors", "DHT read failed, using default values")
             temp = 25.0
             hum = 50.0
 
         light = self.sensors.read_light()
-        soil_summary, soil_majority = self.sensors.read_soil()
+        soil_summary, soil_majority, soil_readings = self.sensors.read_soil()
+        soil_wetness_pct = round(soil_readings.count("WET") / len(soil_readings) * 100, 1) if soil_readings else None
 
-        self.log.info("Sensors", f"Temp={temp}C Hum={hum}% Light={light} Soil={soil_summary}")
+        self.log.info("Sensors", f"Temp={temp}C Hum={hum}% Light={light} Soil={soil_summary} Wetness={soil_wetness_pct}%")
 
-        self.log.info("Drive", "Uploading image")
-        image_url = self.google.upload_image(self.settings.image_path)
-        self.log.success("Drive", f"Uploaded image URL: {image_url}")
+        self.log.info("Storage", "Uploading image")
+        image_url = self.storage.upload_image(self.settings.image_path)
+        self.log.success("Storage", f"Uploaded image URL: {image_url}")
 
         self.log.info("AI", "Sending data for analysis")
         ai_result, prompt_md, response_md = self.ai.analyze(temp, hum, light, soil_summary)
@@ -58,23 +63,26 @@ class SmartPlantSystem:
         actions = self.actuators.apply(ai_result, temp, soil_majority)
         self.log.info("Actuators", f"Actions applied: {actions}")
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row = [
-            timestamp,
-            temp,
-            hum,
-            light,
-            soil_summary,
-            image_url,
-            ai_result["disease"],
-            ai_result["confidence"],
-            actions,
-            ai_result["plant"],
-            prompt_md,
-            response_md,
-        ]
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        payload = {
+            "timestamp": timestamp,
+            "temp": temp,
+            "hum": hum,
+            "temp_readings": temp_readings,
+            "hum_readings": hum_readings,
+            "light": light,
+            "soil_summary": soil_summary,
+            "soil_majority": soil_majority,
+            "soil_readings": soil_readings,
+            "soil_wetness_pct": soil_wetness_pct,
+            "image_url": image_url,
+            "ai_result": ai_result,
+            "actions": actions,
+            "prompt_md": prompt_md,
+            "response_md": response_md,
+        }
 
-        self.log.info("Sheets", "Writing row to sheet")
-        self.google.log_to_sheet(row)
-        self.log.success("Sheets", "Row logged successfully")
-        self.log.debug("Sheets", str(row))
+        self.log.info("Supabase", "Writing cycle to relational tables")
+        self.storage.log_cycle(payload)
+        self.log.success("Supabase", "Cycle logged successfully")
+        self.log.debug("Supabase", str(payload))

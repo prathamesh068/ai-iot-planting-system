@@ -9,13 +9,13 @@ import {
     SunOutlined, ExperimentOutlined,
     ReloadOutlined, ClockCircleOutlined,
 } from '@ant-design/icons';
-import { useSheetData } from './hooks/useSheetData';
+import { useSupabaseData } from './hooks/useSupabaseData';
 import ChartCard from './components/ChartCard';
 import DataTable from './components/DataTable';
 import AIAnalysisCard from './components/AIAnalysisCard';
 import {
     areaData,
-    dualLineData,
+    tempHumidityHeatmapData,
     pieData,
     barData,
     COLORS,
@@ -27,9 +27,19 @@ const { Title, Text } = Typography;
 
 export default function App() {
     const [isDark, setIsDark] = useState(true);
-    const { data, loading, error, refetch } = useSheetData();
+    const { data, loading, error, refetch } = useSupabaseData();
 
     const latestRow = data?.rows[data.rows.length - 1];
+
+    // Recent soil distribution: from the latest reading's per-sensor readings
+    const recentSoilReadings = latestRow?.soilReadings ?? [];
+    const recentSoilDist: Record<string, number> =
+        recentSoilReadings.length > 0
+            ? {
+                DRY: recentSoilReadings.filter((r) => r === 'DRY').length,
+                WET: recentSoilReadings.filter((r) => r === 'WET').length,
+            }
+            : (data?.soil ?? { DRY: 0, WET: 0 });
 
     const bgColor = isDark ? '#0f172a' : '#f1f5f9';
     const cardBg = isDark ? '#1e293b' : '#ffffff';
@@ -227,18 +237,18 @@ export default function App() {
                                 </Col>
                                 <Col xs={24} md={12} xl={8}>
                                     <ChartCard
-                                        title="📊 Temp vs Humidity"
-                                        type="dualLine"
-                                        data={dualLineData(data.labels, data.temps, data.hums)}
+                                        title="📊 Temp vs Humidity Heatmap"
+                                        type="heatmap"
+                                        data={tempHumidityHeatmapData(data.temps, data.hums)}
                                         isDark={isDark}
                                     />
                                 </Col>
                                 <Col xs={24} md={12} xl={8}>
                                     <ChartCard
-                                        title="🌱 Soil Condition Over Time"
-                                        type="area"
-                                        data={areaData(data.labels, data.soilSeries)}
-                                        color={COLORS.green}
+                                        title="🌱 Soil Wetness Condition Over Time"
+                                        type="barTimeSeries"
+                                        data={areaData(data.labels, data.wetnessSeries)}
+                                        color={COLORS.blue}
                                         isDark={isDark}
                                     />
                                 </Col>
@@ -252,9 +262,9 @@ export default function App() {
                                 </Col>
                                 <Col xs={24} md={12} xl={8}>
                                     <ChartCard
-                                        title="🪴 Soil Distribution"
+                                        title="🪤 Recent Soil Distribution"
                                         type="pie"
-                                        data={pieData(data.soil)}
+                                        data={pieData(recentSoilDist)}
                                         colors={PIE_COLORS_SOIL}
                                         isDark={isDark}
                                     />

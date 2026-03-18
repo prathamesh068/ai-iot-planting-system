@@ -99,7 +99,7 @@ export default function AIAnalysisCard({ prompt, response, isDark }: Props) {
                 defaultActiveKey="response"
                 items={items}
                 size="small"
-                style={{ marginTop: -8 }}
+                style={{ marginTop: 2}}
             />
         </Card>
     );

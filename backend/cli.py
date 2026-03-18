@@ -8,10 +8,12 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--dht-pin",
+        "--dht-pins",
         type=int,
-        default=4,
-        help="BCM pin number for DHT11 temperature/humidity sensor",
+        nargs="+",
+        default=[4],
+        metavar="PIN",
+        help="BCM pin numbers for DHT11 temperature/humidity sensors (multiple supported)",
     )
     parser.add_argument(
         "--ldr-pin",
@@ -57,7 +59,7 @@ def parse_args():
 def log_configuration(log, args, is_mock: bool) -> None:
     log.section("AI + IoT Smart Plant System")
     log.info("CONFIG", f"Mode       = {'MOCK' if is_mock else 'REAL'}")
-    log.info("CONFIG", f"DHT pin    = {args.dht_pin}")
+    log.info("CONFIG", f"DHT pins   = {args.dht_pins}")
     log.info("CONFIG", f"LDR pin    = {args.ldr_pin}")
     log.info("CONFIG", f"Soil pins  = {args.soil_pins}")
     log.info("CONFIG", f"Fan pin    = {args.fan_pin}")

@@ -105,6 +105,12 @@ class MockGPIOManager(BaseGPIOManager):
 
 
 def create_gpio_manager(is_mock: bool, ldr_pin: int, soil_pins: List[int], fan_pin: int, pump_pin: int, logger) -> BaseGPIOManager:
+    if not is_mock:
+        try:
+            import RPi.GPIO  # noqa: F401  # pylint: disable=import-error
+        except ImportError:
+            logger.warning("GPIO", "RPi.GPIO not available on this platform, falling back to mock GPIO")
+            is_mock = True
     if is_mock:
         return MockGPIOManager(ldr_pin=ldr_pin, soil_pins=soil_pins, fan_pin=fan_pin, pump_pin=pump_pin, logger=logger)
     return RealGPIOManager(ldr_pin=ldr_pin, soil_pins=soil_pins, fan_pin=fan_pin, pump_pin=pump_pin, logger=logger)

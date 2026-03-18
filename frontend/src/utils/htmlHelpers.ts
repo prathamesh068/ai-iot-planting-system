@@ -1,11 +1,11 @@
 // ── Date helpers ──────────────────────────────────────────────────────────
 
 /**
- * Parses a Google Sheets GViz date string like `Date(2024,0,15,10,30,0)`
+ * Parses a date value string like `Date(2024,0,15,10,30,0)`
  * (month is 0-indexed) into a JS Date. Falls back to `new Date(v)` for
  * plain ISO / formatted strings.
  */
-export function parseSheetDate(v: string): Date | null {
+export function parseDateValue(v: string): Date | null {
   if (!v) return null;
   const m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/.exec(v.trim());
   if (m) {
@@ -16,22 +16,31 @@ export function parseSheetDate(v: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const HUMAN_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
 
-/** Full format for table: "15 Jan, 10:30" */
-export function formatDateFull(v: string): string {
-  const d = parseSheetDate(v);
+function formatHumanReadableDate(v: string): string {
+  const d = parseDateValue(v);
   if (!d) return v || '—';
-  const day  = String(d.getDate()).padStart(2, '0');
-  const mon  = MONTHS[d.getMonth()];
-  const hh   = String(d.getHours()).padStart(2, '0');
-  const mm   = String(d.getMinutes()).padStart(2, '0');
-  return `${day} ${mon}, ${hh}:${mm}`;
+
+  // Intl gives lowercase am/pm in some environments; normalize to AM/PM.
+  return HUMAN_DATE_FORMATTER.format(d).replace(/\b(am|pm)\b/i, (m) => m.toUpperCase());
 }
 
-/** Short format for chart X-axis ticks: "10:30" */
+/** Full format for table: "10 Mar 2026, 2:10 PM" */
+export function formatDateFull(v: string): string {
+  return formatHumanReadableDate(v);
+}
+
+/** Chart format uses same readable timestamp style */
 export function formatDateShort(v: string): string {
-  const d = parseSheetDate(v);
+  const d = parseDateValue(v);
   if (!d) return v || '';
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');

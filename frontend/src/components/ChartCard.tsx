@@ -44,6 +44,15 @@ interface CustomTooltipProps {
     active?: boolean;
     payload?: TooltipPayloadItem[];
     label?: string | number;
+    totalReadings?: number;
+}
+
+interface HeatShapeProps {
+    cx?: number;
+    cy?: number;
+    payload?: HeatmapPoint;
+    xAxis?: { scale?: (value: number) => number };
+    yAxis?: { scale?: (value: number) => number };
 }
 
 const tooltipWrapStyle: React.CSSProperties = {
@@ -152,7 +161,7 @@ function tooltipHeader(kind: TooltipKind, label: string | number | undefined, pa
     return label != null ? formatDateFull(String(label)) : 'Details';
 }
 
-function CustomTooltip({ kind, active, payload, label }: CustomTooltipProps) {
+function CustomTooltip({ kind, active, payload, label, totalReadings }: CustomTooltipProps) {
     if (!active || !payload?.length) return null;
 
     return (
@@ -185,6 +194,19 @@ function CustomTooltip({ kind, active, payload, label }: CustomTooltipProps) {
                         </div>
                     );
                 })}
+                {kind === 'heatmap' && Number.isFinite(totalReadings) && (
+                    <div
+                        style={{
+                            ...tooltipRowStyle,
+                            borderTop: '1px solid #e2e8f0',
+                            marginTop: 2,
+                            paddingTop: 6,
+                        }}
+                    >
+                        <span style={{ color: '#475569' }}>Total Readings</span>
+                        <span style={tooltipValueStyle}>{Math.round(totalReadings as number)}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -231,13 +253,15 @@ export default function ChartCard(props: Props) {
     const heatTempStep = heatTempTicks.length > 1 ? heatTempTicks[1] - heatTempTicks[0] : 1;
     const heatHumStep = heatHumTicks.length > 1 ? heatHumTicks[1] - heatHumTicks[0] : 1;
     const heatMaxCount = heatPoints.length ? Math.max(...heatPoints.map((point) => point.count), 0) : 0;
+    const heatTotalReadings = heatPoints.reduce((sum, point) => sum + (point.count ?? 0), 0);
     const estimatedCellWidth = Math.floor(280 / heatCols);
     const estimatedCellHeight = Math.floor(165 / heatRows);
-    const heatCellSide = Math.max(12, Math.min(36, Math.min(estimatedCellWidth, estimatedCellHeight) + 2));
+    const fallbackHeatCellWidth = Math.max(10, Math.min(40, estimatedCellWidth + 4));
+    const fallbackHeatCellHeight = Math.max(8, Math.min(32, estimatedCellHeight + 2));
 
     const heatCellColor = (count: number, maxCount: number): string => {
         if (count <= 0 || maxCount <= 0) {
-            return isDark ? '#334155' : '#e2e8f0';
+            return isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(148, 163, 184, 0.16)';
         }
 
         const ratio = Math.max(0, Math.min(1, count / maxCount));
@@ -246,6 +270,35 @@ export default function ChartCard(props: Props) {
         if (ratio < 0.7) return '#facc15';
         if (ratio < 0.85) return '#f59e0b';
         return '#ef4444';
+    };
+
+    const resolveHeatCellRect = (shapeProps: HeatShapeProps): { x: number; y: number; width: number; height: number } => {
+        const cx = shapeProps.cx ?? 0;
+        const cy = shapeProps.cy ?? 0;
+        const point = shapeProps.payload;
+        const xScale = shapeProps.xAxis?.scale;
+        const yScale = shapeProps.yAxis?.scale;
+
+        if (point && typeof xScale === 'function' && typeof yScale === 'function') {
+            const left = xScale(point.temp - heatTempStep / 2);
+            const right = xScale(point.temp + heatTempStep / 2);
+            const top = yScale(point.hum + heatHumStep / 2);
+            const bottom = yScale(point.hum - heatHumStep / 2);
+
+            return {
+                x: Math.min(left, right),
+                y: Math.min(top, bottom),
+                width: Math.max(1, Math.abs(right - left) + 1),
+                height: Math.max(1, Math.abs(bottom - top) + 1),
+            };
+        }
+
+        return {
+            x: cx - fallbackHeatCellWidth / 2,
+            y: cy - fallbackHeatCellHeight / 2,
+            width: fallbackHeatCellWidth,
+            height: fallbackHeatCellHeight,
+        };
     };
 
     return (
@@ -305,7 +358,6 @@ export default function ChartCard(props: Props) {
                     </LineChart>
                 ) : props.type === 'heatmap' ? (
                     <ScatterChart data={props.data} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
-                        <CartesianGrid stroke={gc} strokeDasharray="0 0" />
                         <XAxis
                             type="number"
                             dataKey="temp"
@@ -345,41 +397,23 @@ export default function ChartCard(props: Props) {
                             }
                             label={{ value: 'Humidity (%)', angle: -90, position: 'insideLeft', fill: lc, fontSize: 11 }}
                         />
-                        <Tooltip content={<CustomTooltip kind="heatmap" />} />
+                        <Tooltip content={<CustomTooltip kind="heatmap" totalReadings={heatTotalReadings} />} />
                         <Scatter
                             data={props.data}
-                            shape={(shapeProps: { cx?: number; cy?: number; payload?: HeatmapPoint }) => {
-                                const cx = shapeProps.cx ?? 0;
-                                const cy = shapeProps.cy ?? 0;
+                            shape={(shapeProps: HeatShapeProps) => {
                                 const count = shapeProps.payload?.count ?? 0;
-                                const half = heatCellSide / 2;
-                                const showValue = heatCellSide >= 16;
                                 const fill = heatCellColor(count, heatMaxCount);
+                                const rect = resolveHeatCellRect(shapeProps);
+
                                 return (
-                                    <g>
-                                        <rect
-                                            x={cx - half}
-                                            y={cy - half}
-                                            width={heatCellSide}
-                                            height={heatCellSide}
-                                            rx={2}
-                                            fill={fill}
-                                            stroke={isDark ? '#0b1220' : '#ffffff'}
-                                            strokeWidth={1}
-                                        />
-                                        {showValue && (
-                                            <text
-                                                x={cx}
-                                                y={cy + 4}
-                                                textAnchor="middle"
-                                                fill={count > 0 ? '#ffffff' : (isDark ? '#e2e8f0' : '#475569')}
-                                                fontSize={10}
-                                                fontWeight={700}
-                                            >
-                                                {count}
-                                            </text>
-                                        )}
-                                    </g>
+                                    <rect
+                                        x={rect.x}
+                                        y={rect.y}
+                                        width={rect.width}
+                                        height={rect.height}
+                                        fill={fill}
+                                        stroke="none"
+                                    />
                                 );
                             }}
                         />

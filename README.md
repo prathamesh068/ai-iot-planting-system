@@ -107,30 +107,48 @@ Create a `.env` file in the project root:
 GEMINI_API_KEY=your_gemini_api_key
 DRIVE_FOLDER_ID=your_google_drive_folder_id
 SPREADSHEET_ID=your_google_spreadsheet_id
+MOCK=false
 ```
+
+Set `MOCK=true` for local development without hardware, camera, or cloud APIs.
 
 ---
 
 ## 🚀 Running the System
 
 ```bash
-python3 code.py
+python3 run.py
+```
+
+### Local run without components (mock mode)
+
+```bash
+python3 run.py --mock
+```
+
+You can also enable mock mode from environment:
+
+```bash
+export MOCK=true
+python3 run.py
 ```
 
 ### Optional arguments:
 
-| Argument      | Default          | Description                          |
-| ------------- | ---------------- | ------------------------------------ |
-| `--dht-pin`   | `4`              | BCM pin for DHT11 sensor             |
-| `--ldr-pin`   | `17`             | BCM pin for LDR light sensor         |
-| `--soil-pins` | `27 28 29 30 31` | BCM pins for 5 soil moisture sensors |
-| `--fan-pin`   | `22`             | BCM pin for fan relay                |
-| `--pump-pin`  | `23`             | BCM pin for water pump relay         |
+| Argument          | Default               | Description                               |
+| ----------------- | --------------------- | ----------------------------------------- |
+| `--dht-pin`       | `4`                   | BCM pin for DHT11 sensor                  |
+| `--ldr-pin`       | `20`                  | BCM pin for LDR light sensor              |
+| `--soil-pins`     | `5 6 13 19 26 21`     | BCM pins for soil moisture sensors        |
+| `--fan-pin`       | `27`                  | BCM pin for fan relay                     |
+| `--pump-pin`      | `17`                  | BCM pin for water pump relay              |
+| `--pump-duration` | `5`                   | Seconds to keep pump ON during watering   |
+| `--mock`          | `false`               | Use mock services (no hardware/cloud)     |
 
 **Example:**
 
 ```bash
-python3 code.py --dht-pin 4 --ldr-pin 17 --soil-pins 27 28 29 30 31 --fan-pin 22 --pump-pin 23
+python3 run.py --dht-pin 4 --ldr-pin 17 --soil-pins 27 28 29 30 31 --fan-pin 22 --pump-pin 23
 ```
 
 ---
@@ -139,7 +157,21 @@ python3 code.py --dht-pin 4 --ldr-pin 17 --soil-pins 27 28 29 30 31 --fan-pin 22
 
 ```
 ai-iot-planting-system/
-├── code.py               # Main application
+├── run.py                # Thin launcher for backend
+├── backend/
+│   ├── main.py           # Backend entrypoint
+│   ├── system.py         # Orchestrates one full cycle
+│   ├── cli.py            # Argument parser
+│   ├── config.py         # Env + app settings
+│   ├── contracts.py      # Base interfaces
+│   ├── factories.py      # MOCK/REAL service assembly
+│   └── services/
+│       ├── gpio_service.py
+│       ├── sensor_service.py
+│       ├── camera_service.py
+│       ├── google_service.py
+│       ├── ai_service.py
+│       └── actuator_service.py
 ├── requirements.txt      # Dependencies for Windows / Linux
 ├── requirements.pi.txt   # Dependencies for Raspberry Pi
 ├── .env                  # Environment variables (not committed)

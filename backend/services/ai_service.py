@@ -409,7 +409,7 @@ class RealAIService(BaseAIService):
         self._model = "gemini-2.5-flash-lite"
 
     def analyze(self, temp: Any, humidity: Any, light: str, soil_summary: str):
-        with open('image.png', "rb") as image_file:
+        with open(self.image_path, "rb") as image_file:
             image = image_file.read()
 
         prompt_text = self.PROMPT.format(temp=temp, humidity=humidity, light=light, soil=soil_summary)

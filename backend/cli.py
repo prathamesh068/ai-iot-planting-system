@@ -52,6 +52,17 @@ def parse_args():
         action="store_true",
         help="Run using mock services (no hardware, no cloud API calls)",
     )
+    parser.add_argument(
+        "--listen-commands",
+        action="store_true",
+        help="Listen for Supabase realtime control commands and run cycles on demand",
+    )
+    parser.add_argument(
+        "--command-channel",
+        type=str,
+        default=None,
+        help="Supabase realtime channel name for control commands",
+    )
 
     return parser.parse_args()
 
@@ -65,3 +76,7 @@ def log_configuration(log, args, is_mock: bool) -> None:
     log.info("CONFIG", f"Fan pin    = {args.fan_pin}")
     log.info("CONFIG", f"Pump pin   = {args.pump_pin}")
     log.info("CONFIG", f"Pump dur   = {args.pump_duration}s")
+    log.info("CONFIG", f"Cmd mode   = {'ON' if args.listen_commands else 'OFF'}")
+    if args.listen_commands:
+        channel = args.command_channel if args.command_channel else "(from SUPABASE_COMMAND_CHANNEL)"
+        log.info("CONFIG", f"Cmd channel= {channel}")

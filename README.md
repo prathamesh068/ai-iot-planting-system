@@ -8,6 +8,7 @@ An AI-powered IoT system that monitors plant health using sensors, captures imag
   - Captures image and sensor data
   - Runs AI analysis using Gemini
   - Uploads captured image to Supabase Storage
+  - Can listen for Supabase realtime broadcast commands (`start_reading`) to start frequent runs
   - Writes one cycle across relational tables:
     - plant_cycles
     - sensor_readings
@@ -16,6 +17,7 @@ An AI-powered IoT system that monitors plant health using sensors, captures imag
 - Frontend
   - Uses Supabase JS client with anon key
   - Reads latest cycles directly from Supabase (no custom API server)
+  - Broadcasts control commands over Supabase realtime from the dashboard button
   - Renders charts, table, and latest AI prompt/response
 
 ## Requirements
@@ -73,6 +75,7 @@ GEMINI_API_KEY=your_gemini_api_key
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_STORAGE_BUCKET=plant-images
+SUPABASE_COMMAND_CHANNEL=plant-control
 MOCK=false
 ```
 
@@ -94,6 +97,12 @@ This creates all required tables, indexes, read policies, and the storage bucket
 
 ```bash
 python3 run.py
+```
+
+Command listener mode (waits for UI broadcast and starts frequent cycles):
+
+```bash
+python3 run.py --listen-commands
 ```
 
 Mock mode:
@@ -118,7 +127,10 @@ Copy frontend/.env.example to frontend/.env and set values:
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_SUPABASE_CONTROL_CHANNEL=plant-control
 ```
+
+Use the dashboard `Start Reading` button to broadcast `start_reading`; backend listener mode will then start periodic runs.
 
 ### 3. Run frontend
 
@@ -134,15 +146,18 @@ pnpm build
 
 ## Optional CLI Arguments
 
-| Argument          | Default               | Description                             |
-| ----------------- | --------------------- | --------------------------------------- |
-| --dht-pin         | 4                     | BCM pin for DHT11 sensor                |
-| --ldr-pin         | 20                    | BCM pin for LDR light sensor            |
-| --soil-pins       | 5 6 13 19 26 21       | BCM pins for soil moisture sensors      |
-| --fan-pin         | 27                    | BCM pin for fan relay                   |
-| --pump-pin        | 17                    | BCM pin for water pump relay            |
-| --pump-duration   | 5                     | Seconds to keep pump ON during watering |
-| --mock            | false                 | Use mock services                       |
+| Argument                   | Default         | Description                                                                |
+| -------------------------- | --------------- | -------------------------------------------------------------------------- |
+| --dht-pins                 | 4               | BCM pin(s) for DHT11 sensor(s)                                             |
+| --ldr-pin                  | 20              | BCM pin for LDR light sensor                                               |
+| --soil-pins                | 5 6 13 19 26 21 | BCM pins for soil moisture sensors                                         |
+| --fan-pin                  | 27              | BCM pin for fan relay                                                      |
+| --pump-pin                 | 17              | BCM pin for water pump relay                                               |
+| --pump-duration            | 5               | Seconds to keep pump ON during watering                                    |
+| --mock                     | false           | Use mock services                                                          |
+| --listen-commands          | false           | Listen on Supabase realtime control channel for `start_reading` commands  |
+| --command-channel          | env/default     | Override realtime channel (falls back to `SUPABASE_COMMAND_CHANNEL`)       |
+| --command-default-interval | 60              | Fallback frequent-reading interval in seconds when command has no interval |
 
 ## Project Structure
 

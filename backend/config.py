@@ -12,6 +12,7 @@ class Settings:
     supabase_url: str
     supabase_service_role_key: str
     supabase_storage_bucket: str
+    supabase_command_channel: str
     mock: bool
 
 
@@ -32,5 +33,6 @@ def load_settings(mock_override: Optional[bool] = None) -> Settings:
         supabase_url=os.environ.get("SUPABASE_URL", ""),
         supabase_service_role_key=os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ""),
         supabase_storage_bucket=os.environ.get("SUPABASE_STORAGE_BUCKET", "plant-images"),
+        supabase_command_channel=os.environ.get("SUPABASE_COMMAND_CHANNEL", "plant-control"),
         mock=mock_value,
     )

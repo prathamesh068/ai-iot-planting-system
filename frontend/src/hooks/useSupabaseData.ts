@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabase';
 import type { PlantRow, ProcessedData, TodoItem } from '../types';
 
 const REFRESH_MS = 60_000;
+const CONTROL_CHANNEL = import.meta.env.VITE_SUPABASE_CONTROL_CHANNEL ?? 'plant-control';
+const HEARTBEAT_RETRY_INITIAL_MS = 2_000;
+const HEARTBEAT_RETRY_MAX_MS = 30_000;
+const HEARTBEAT_RETRY_MULTIPLIER = 1.5;
+
+export interface HeartbeatPayload {
+  timestamp: string;
+  status: string;
+  is_running: boolean;
+}
 
 interface SensorReading {
   temp_c: number | null;
@@ -232,6 +243,149 @@ function parseRows(cycles: PlantCycleRow[]): ProcessedData {
   };
 }
 
+
+
+export interface HeartbeatSubscription {
+  unsubscribe: () => Promise<void>;
+  send: (event: string, payload: Record<string, unknown>) => Promise<void>;
+}
+
+// ---------------------------------------------------------------------------
+// Singleton heartbeat manager — one Realtime channel shared by all callers.
+// ---------------------------------------------------------------------------
+type HeartbeatListener = {
+  onHeartbeat: (payload: HeartbeatPayload) => void;
+  onDisconnect: () => void;
+};
+
+let _channel: RealtimeChannel | null = null;
+let _retryTimeout: ReturnType<typeof setTimeout> | null = null;
+let _isReconnectScheduled = false;
+let _retryCount = 0;
+let _isStarted = false;
+const _listeners = new Set<HeartbeatListener>();
+
+function _calculateBackoffMs(): number {
+  const delay = HEARTBEAT_RETRY_INITIAL_MS * Math.pow(HEARTBEAT_RETRY_MULTIPLIER, _retryCount);
+  return Math.min(delay, HEARTBEAT_RETRY_MAX_MS);
+}
+
+async function _removeChannel(target?: RealtimeChannel | null): Promise<void> {
+  const ch = target ?? _channel;
+  if (!ch) return;
+  if (_channel === ch) _channel = null;
+  try {
+    await getSupabaseClient().removeChannel(ch);
+  } catch {
+    // ignore
+  }
+}
+
+async function _scheduleReconnect(reason: unknown, activeChannel?: RealtimeChannel | null): Promise<void> {
+  if (_isReconnectScheduled) return;
+  _isReconnectScheduled = true;
+  await _removeChannel(activeChannel);
+  _listeners.forEach((l) => l.onDisconnect());
+
+  const backoffMs = _calculateBackoffMs();
+  _retryCount += 1;
+  console.warn(
+    `[Heartbeat] Connection lost (retry ${_retryCount}, waiting ${backoffMs}ms):`,
+    reason instanceof Error ? reason.message : reason,
+  );
+
+  _retryTimeout = window.setTimeout(() => {
+    _isReconnectScheduled = false;
+    void _startListening();
+  }, backoffMs);
+}
+
+function _startListening(): void {
+  if (_listeners.size === 0) return;
+
+  _isStarted = true;
+  const supabase = getSupabaseClient();
+  const currentChannel = supabase.channel(CONTROL_CHANNEL, {
+    config: { broadcast: { ack: false, self: false } },
+  });
+  _channel = currentChannel;
+  let hasSubscribed = false;
+
+  currentChannel.on('broadcast', { event: 'device_heartbeat' }, (payload: any) => {
+    if (_channel !== currentChannel) return;
+    const data = payload?.payload as HeartbeatPayload | undefined;
+    if (!data) return;
+    _retryCount = 0;
+    _listeners.forEach((l) => l.onHeartbeat(data));
+  });
+
+  currentChannel.subscribe((status, err) => {
+    if (_channel !== currentChannel) return;
+
+    if (status === 'SUBSCRIBED') {
+      hasSubscribed = true;
+      _retryCount = 0;
+      console.log('[Heartbeat] Subscribed to device heartbeat channel');
+      return;
+    }
+
+    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+      const reason = err ?? new Error(`Heartbeat channel failed: ${status}`);
+      if (hasSubscribed) {
+        console.warn(`[Heartbeat] Channel dropped after subscribe: ${status}`);
+      } else {
+        console.warn(`[Heartbeat] Initial subscribe failed: ${status}`);
+      }
+      void _scheduleReconnect(reason, currentChannel);
+    }
+  });
+}
+
+export function subscribeToHeartbeat(
+  onHeartbeat: (payload: HeartbeatPayload) => void,
+  onDisconnect: () => void,
+): HeartbeatSubscription {
+  const listener: HeartbeatListener = { onHeartbeat, onDisconnect };
+  _listeners.add(listener);
+
+  if (!_isStarted) {
+    _startListening();
+  }
+
+  return {
+    unsubscribe: async () => {
+      _listeners.delete(listener);
+      if (_listeners.size === 0) {
+        _isStarted = false;
+        if (_retryTimeout) {
+          window.clearTimeout(_retryTimeout);
+          _retryTimeout = null;
+        }
+        _isReconnectScheduled = false;
+        _retryCount = 0;
+        await _removeChannel();
+      }
+    },
+    send: async (event: string, payload: Record<string, unknown>) => {
+      if (!_channel) {
+        throw new Error('Heartbeat channel not yet subscribed — cannot send command');
+      }
+      const sendStatus = await _channel.send({
+        type: 'broadcast',
+        event,
+        payload: {
+          source: 'dashboard-ui',
+          requested_at: new Date().toISOString(),
+          ...payload,
+        },
+      });
+      if (sendStatus !== 'ok') {
+        throw new Error(`Broadcast failed with status: ${sendStatus}`);
+      }
+    },
+  };
+}
+
 export function useSupabaseData() {
   const [data, setData] = useState<ProcessedData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -270,11 +424,35 @@ export function useSupabaseData() {
     }
   }, []);
 
+  // Reuse the singleton channel managed by subscribeToHeartbeat — no new subscription needed.
+  const broadcastStartReading = useCallback(async () => {
+    if (!_channel) {
+      throw new Error('Not connected — heartbeat channel is not subscribed yet');
+    }
+    const sendStatus = await _channel.send({
+      type: 'broadcast',
+      event: 'start_reading',
+      payload: {
+        source: 'dashboard-ui',
+        requested_at: new Date().toISOString(),
+      },
+    });
+    if (sendStatus !== 'ok') {
+      throw new Error(`Failed to send command: broadcast returned ${sendStatus}`);
+    }
+  }, []);
+
   useEffect(() => {
     void fetchData();
     const interval = setInterval(() => void fetchData(), REFRESH_MS);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  return {
+    data,
+    loading,
+    error,
+    refetch: fetchData,
+    broadcastStartReading,
+  };
 }

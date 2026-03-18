@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import {
     ConfigProvider, theme, Layout, Row, Col,
-    Card, Statistic, Spin, Alert, Switch, Typography, Space, Button, Badge,
+    Card, Statistic, Spin, Alert, Switch, Typography, Space, Button, Badge, message, Tooltip,
 } from 'antd';
 import {
     BulbOutlined, BulbFilled,
     ThunderboltOutlined, CloudOutlined,
     SunOutlined, ExperimentOutlined,
     ReloadOutlined, ClockCircleOutlined, TeamOutlined, BarChartOutlined,
+    PlayCircleOutlined,
 } from '@ant-design/icons';
 import { useSupabaseData } from './hooks/useSupabaseData';
+import { useDeviceHeartbeat } from './hooks/useDeviceHeartbeat';
 import ChartCard from './components/ChartCard';
 import DataTable from './components/DataTable';
 import AIAnalysisCard from './components/AIAnalysisCard';
@@ -29,7 +31,16 @@ const { Title, Text } = Typography;
 export default function App() {
     const [isDark, setIsDark] = useState(true);
     const [page, setPage] = useState<'dashboard' | 'about'>('dashboard');
-    const { data, loading, error, refetch } = useSupabaseData();
+    const [activeCommand, setActiveCommand] = useState<'start' | null>(null);
+    const [messageApi, messageContextHolder] = message.useMessage();
+    const {
+        data,
+        loading,
+        error,
+        refetch,
+        broadcastStartReading,
+    } = useSupabaseData();
+    const { isLive, secondsSinceHeartbeat, isDeviceRunning } = useDeviceHeartbeat();
 
     const latestRow = data?.rows[data.rows.length - 1];
 
@@ -47,6 +58,19 @@ export default function App() {
     const cardBg = isDark ? '#1e293b' : '#ffffff';
     const headerBg = isDark ? '#0f172a' : '#ffffff';
     const borderCol = isDark ? '#334155' : '#e2e8f0';
+
+    const handleStartReading = async () => {
+        setActiveCommand('start');
+        try {
+            await broadcastStartReading();
+            messageApi.success('Reading cycle started.');
+        } catch (err) {
+            const text = err instanceof Error ? err.message : 'Unknown error';
+            messageApi.error(`Failed to send command: ${text}`);
+        } finally {
+            setActiveCommand(null);
+        }
+    };
 
     return (
         <ConfigProvider
@@ -66,6 +90,7 @@ export default function App() {
                 },
             }}
         >
+            {messageContextHolder}
             <Layout style={{ minHeight: '100vh', background: bgColor }}>
 
                 {/* ── Header ── */}
@@ -137,15 +162,17 @@ export default function App() {
                     {/* Controls row */}
                     <Space size={10} style={{ paddingTop: 4, paddingBottom: 4 }}>
                         {page === 'dashboard' && (
-                            <Badge
-                                status="processing"
-                                color="#22c55e"
-                                text={
-                                    <Text style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>
-                                        Live
-                                    </Text>
-                                }
-                            />
+                            <Tooltip title={isDeviceRunning ? 'Backend running cycle' : isLive ? `Backend alive (${secondsSinceHeartbeat}s ago)` : 'Backend disconnected or not running listener mode'}>
+                                <Badge
+                                    status={isDeviceRunning ? 'processing' : isLive ? 'processing' : 'error'}
+                                    color={isDeviceRunning ? '#f59e0b' : isLive ? '#22c55e' : '#ef4444'}
+                                    text={
+                                        <Text style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>
+                                            {isDeviceRunning ? 'Running' : isLive ? 'Live' : 'Disconnected'}
+                                        </Text>
+                                    }
+                                />
+                            </Tooltip>
                         )}
                         {page === 'dashboard' && (
                             <Button
@@ -155,6 +182,21 @@ export default function App() {
                                 type="text"
                                 style={{ color: isDark ? '#94a3b8' : '#64748b' }}
                             />
+                        )}
+                        {page === 'dashboard' && (
+                            <Tooltip title={!isLive ? 'Backend is offline' : isDeviceRunning ? 'Cycle in progress' : 'Start reading cycle'}>
+                                <Button
+                                    size="small"
+                                    type="primary"
+                                    icon={<PlayCircleOutlined />}
+                                    loading={activeCommand === 'start'}
+                                    disabled={!isLive || isDeviceRunning || activeCommand === 'start'}
+                                    onClick={() => void handleStartReading()}
+                                    style={{ borderRadius: 8, fontSize: 12 }}
+                                >
+                                    Start
+                                </Button>
+                            </Tooltip>
                         )}
                         <Button
                             size="small"

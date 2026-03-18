@@ -1,0 +1,237 @@
+{
+  "plant_cycles": [
+    {
+      "id": "bc6bcbd7-6c43-4ac9-b67c-25901ab0b5a0",
+      "captured_at": "2026-03-18T04:40:32.944855+00:00",
+      "image_url": "https://owdncqvobkggpqreftuh.supabase.co/storage/v1/object/public/plant-images/plant_1773808826_9518ae48.jpg?",
+      "created_at": "2026-03-18T04:40:34.074066+00:00"
+    },
+    {
+      "id": "894d4133-2cca-416b-ba5b-5f5b0d007ef8",
+      "captured_at": "2026-03-18T04:49:19.880891+00:00",
+      "image_url": "https://owdncqvobkggpqreftuh.supabase.co/storage/v1/object/public/plant-images/plant_1773809356_eef32ca8.jpg?",
+      "created_at": "2026-03-18T04:49:20.582201+00:00"
+    },
+    {
+      "id": "8135076e-a0d5-4a03-b895-60a7b25cb36a",
+      "captured_at": "2026-03-18T04:56:15.644345+00:00",
+      "image_url": "https://owdncqvobkggpqreftuh.supabase.co/storage/v1/object/public/plant-images/plant_1773809767_cb8d3c6c.jpg?",
+      "created_at": "2026-03-18T04:56:16.329031+00:00"
+    },
+    {
+      "id": "8d72dfd9-2831-4b3a-8fbf-59504f3ccd27",
+      "captured_at": "2026-03-18T05:35:18.460854+00:00",
+      "image_url": "https://owdncqvobkggpqreftuh.supabase.co/storage/v1/object/public/plant-images/plant_1773812116_560642b4.jpg?",
+      "created_at": "2026-03-18T05:35:19.32784+00:00"
+    },
+    {
+      "id": "07e337e8-0791-4be2-b635-c1e8c077035e",
+      "captured_at": "2026-03-18T05:48:50.093237+00:00",
+      "image_url": "https://owdncqvobkggpqreftuh.supabase.co/storage/v1/object/public/plant-images/plant_1773812926_7a1593d3.jpg?",
+      "created_at": "2026-03-18T05:48:51.171715+00:00"
+    }
+  ],
+  "sensor_readings": [
+    {
+      "id": 1,
+      "cycle_id": "bc6bcbd7-6c43-4ac9-b67c-25901ab0b5a0",
+      "temp_c": 26.5,
+      "humidity_pct": 58,
+      "light_state": "BRIGHT",
+      "soil_summary": "4/6 DRY",
+      "soil_majority": "DRY",
+      "created_at": "2026-03-18T04:40:34.199847+00:00",
+      "temp_readings": null,
+      "hum_readings": null,
+      "soil_readings": null,
+      "soil_wetness_pct": null
+    },
+    {
+      "id": 2,
+      "cycle_id": "894d4133-2cca-416b-ba5b-5f5b0d007ef8",
+      "temp_c": 26.5,
+      "humidity_pct": 58,
+      "light_state": "BRIGHT",
+      "soil_summary": "4/6 DRY",
+      "soil_majority": "DRY",
+      "created_at": "2026-03-18T04:49:20.654211+00:00",
+      "temp_readings": null,
+      "hum_readings": null,
+      "soil_readings": null,
+      "soil_wetness_pct": null
+    },
+    {
+      "id": 3,
+      "cycle_id": "8135076e-a0d5-4a03-b895-60a7b25cb36a",
+      "temp_c": 26.5,
+      "humidity_pct": 58,
+      "light_state": "BRIGHT",
+      "soil_summary": "4/6 DRY",
+      "soil_majority": "DRY",
+      "created_at": "2026-03-18T04:56:16.39649+00:00",
+      "temp_readings": null,
+      "hum_readings": null,
+      "soil_readings": null,
+      "soil_wetness_pct": null
+    },
+    {
+      "id": 4,
+      "cycle_id": "8d72dfd9-2831-4b3a-8fbf-59504f3ccd27",
+      "temp_c": 25.5,
+      "humidity_pct": 58,
+      "light_state": "BRIGHT",
+      "soil_summary": "4/6 DRY",
+      "soil_majority": "DRY",
+      "created_at": "2026-03-18T05:35:19.457335+00:00",
+      "temp_readings": [
+        25.5
+      ],
+      "hum_readings": [
+        58
+      ],
+      "soil_readings": [
+        "DRY",
+        "DRY",
+        "DRY",
+        "DRY",
+        "WET",
+        "WET"
+      ],
+      "soil_wetness_pct": null
+    },
+    {
+      "id": 5,
+      "cycle_id": "07e337e8-0791-4be2-b635-c1e8c077035e",
+      "temp_c": 25.5,
+      "humidity_pct": 58,
+      "light_state": "BRIGHT",
+      "soil_summary": "4/6 DRY",
+      "soil_majority": "DRY",
+      "created_at": "2026-03-18T05:48:51.249152+00:00",
+      "temp_readings": [
+        25.5
+      ],
+      "hum_readings": [
+        58
+      ],
+      "soil_readings": [
+        "DRY",
+        "DRY",
+        "DRY",
+        "DRY",
+        "WET",
+        "WET"
+      ],
+      "soil_wetness_pct": 33.3
+    }
+  ],
+  "ai_analyses": [
+    {
+      "id": 1,
+      "cycle_id": "bc6bcbd7-6c43-4ac9-b67c-25901ab0b5a0",
+      "disease": "No disease found",
+      "plant": "Healthy plant",
+      "confidence": 0.93,
+      "recommendation": {
+        "water_plant": true,
+        "increase_airflow": false,
+        "reduce_temperature": false
+      },
+      "prompt_markdown": "\nYou are an agricultural AI in an IoT system.\n\nSensor Data:\n- Temperature: 26.5 C\n- Humidity: 58.0 %\n- Light: BRIGHT\n- Soil Moisture: 4/6 DRY\n\nRules:\n- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n- Recommend watering ONLY if the majority soil reading is DRY\n- Recommend airflow if disease detected OR temperature > 30\n- Reduce temperature ONLY if temperature > 30\n- When no disease is found, set disease to No disease found and all flags to false\n- When no plant is detected, set plant to No plant detected\n\nReturn ONLY valid JSON with fields: disease, plant, confidence, recommendation.\n",
+      "response_markdown": "```json\n{\n  \"disease\": \"No disease found\",\n  \"plant\": \"Healthy plant\",\n  \"confidence\": 0.93,\n  \"recommendation\": {\n    \"reduce_temperature\": false,\n    \"water_plant\": true,\n    \"increase_airflow\": false\n  }\n}\n```",
+      "created_at": "2026-03-18T04:40:34.251865+00:00"
+    },
+    {
+      "id": 2,
+      "cycle_id": "894d4133-2cca-416b-ba5b-5f5b0d007ef8",
+      "disease": "No disease found",
+      "plant": "No plant detected",
+      "confidence": 0.9,
+      "recommendation": {
+        "water_plant": false,
+        "increase_airflow": false,
+        "reduce_temperature": false
+      },
+      "prompt_markdown": "\nYou are an agricultural AI in an IoT system.\n\nSensor Data:\n- Temperature: 26.5 C\n- Humidity: 58.0 %\n- Light: BRIGHT\n- Soil Moisture: 4/6 DRY\n\nRules:\n- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n- Recommend watering ONLY if the majority soil reading is DRY\n- Recommend airflow if disease detected OR temperature > 30\n- Reduce temperature ONLY if temperature > 30\n- When no disease is found, set disease to No disease found and all flags to false\n- When no plant is detected, set plant to No plant detected\n\nReturn ONLY valid JSON with fields: disease, plant, confidence, recommendation.\n",
+      "response_markdown": "```json\n```json\n{\n  \"disease\": \"No disease found\",\n  \"plant\": \"No plant detected\",\n  \"confidence\": 0.9,\n  \"recommendation\": \"Water the plant.\"\n}\n```\n```",
+      "created_at": "2026-03-18T04:49:20.7197+00:00"
+    },
+    {
+      "id": 3,
+      "cycle_id": "8135076e-a0d5-4a03-b895-60a7b25cb36a",
+      "disease": "No disease found",
+      "plant": "No plant detected",
+      "confidence": 0,
+      "recommendation": {
+        "water_plant": true,
+        "increase_airflow": false,
+        "reduce_temperature": false
+      },
+      "prompt_markdown": "\nYou are an agricultural AI in an IoT system.\n\nSensor Data:\n- Temperature: 26.5 C\n- Humidity: 58.0 %\n- Light: BRIGHT\n- Soil Moisture: 4/6 DRY\n\nRules:\n- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n- Recommend watering ONLY if the majority soil reading is DRY\n- Recommend airflow if disease detected OR temperature > 30\n- Reduce temperature ONLY if temperature > 30\n- When no disease is found, set disease to No disease found and all flags to false\n- When no plant is detected, set plant to No plant detected\n\nReturn ONLY valid JSON with fields: disease, plant, confidence, recommendation.\n",
+      "response_markdown": "```json\n{\n  \"disease\": \"No disease found\",\n  \"plant\": \"No plant detected\",\n  \"confidence\": 0.0,\n  \"recommendation\": {\n    \"reduce_temperature\": false,\n    \"water_plant\": true,\n    \"increase_airflow\": false\n  }\n}\n```",
+      "created_at": "2026-03-18T04:56:16.459481+00:00"
+    },
+    {
+      "id": 4,
+      "cycle_id": "8d72dfd9-2831-4b3a-8fbf-59504f3ccd27",
+      "disease": "No disease found",
+      "plant": "No plant detected",
+      "confidence": 0,
+      "recommendation": {
+        "water_plant": false,
+        "increase_airflow": false,
+        "reduce_temperature": false
+      },
+      "prompt_markdown": "\nYou are an agricultural AI in an IoT system.\n\nSensor Data:\n- Temperature: 25.5 C\n- Humidity: 58.0 %\n- Light: BRIGHT\n- Soil Moisture: 4/6 DRY\n\nRules:\n- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n- Recommend watering ONLY if the majority soil reading is DRY\n- Recommend airflow if disease detected OR temperature > 30\n- Reduce temperature ONLY if temperature > 30\n- When no disease is found, set disease to No disease found and all flags to false\n- When no plant is detected, set plant to No plant detected\n\nReturn ONLY valid JSON with fields: disease, plant, confidence, recommendation.\n",
+      "response_markdown": "```json\n{\"disease\": \"No disease found\", \"plant\": \"No plant detected\", \"confidence\": 0.0, \"recommendation\": {\"reduce_temperature\": false, \"water_plant\": false, \"increase_airflow\": false}}\n```",
+      "created_at": "2026-03-18T05:35:19.521814+00:00"
+    },
+    {
+      "id": 5,
+      "cycle_id": "07e337e8-0791-4be2-b635-c1e8c077035e",
+      "disease": "No disease found",
+      "plant": "No plant detected",
+      "confidence": 0,
+      "recommendation": {
+        "water_plant": false,
+        "increase_airflow": false,
+        "reduce_temperature": false
+      },
+      "prompt_markdown": "\nYou are an agricultural AI in an IoT system.\n\nSensor Data:\n- Temperature: 25.5 C\n- Humidity: 58.0 %\n- Light: BRIGHT\n- Soil Moisture: 4/6 DRY\n\nRules:\n- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n- Recommend watering ONLY if the majority soil reading is DRY\n- Recommend airflow if disease detected OR temperature > 30\n- Reduce temperature ONLY if temperature > 30\n- When no disease is found, set disease to No disease found and all flags to false\n- When no plant is detected, set plant to No plant detected\n\nReturn ONLY valid JSON with fields: disease, plant, confidence, recommendation.\n",
+      "response_markdown": "```json\n{\n  \"disease\": \"No disease found\",\n  \"plant\": \"No plant detected\",\n  \"confidence\": 0.0,\n  \"recommendation\": {\n    \"reduce_temperature\": false,\n    \"water_plant\": false,\n    \"increase_airflow\": false\n  }\n}\n```",
+      "created_at": "2026-03-18T05:48:51.301003+00:00"
+    }
+  ],
+  "actuator_actions": [
+    {
+      "id": 1,
+      "cycle_id": "bc6bcbd7-6c43-4ac9-b67c-25901ab0b5a0",
+      "actions": "Watered (5s)",
+      "created_at": "2026-03-18T04:40:34.313305+00:00"
+    },
+    {
+      "id": 2,
+      "cycle_id": "894d4133-2cca-416b-ba5b-5f5b0d007ef8",
+      "actions": "None",
+      "created_at": "2026-03-18T04:49:20.756778+00:00"
+    },
+    {
+      "id": 3,
+      "cycle_id": "8135076e-a0d5-4a03-b895-60a7b25cb36a",
+      "actions": "Watered (5s)",
+      "created_at": "2026-03-18T04:56:16.498093+00:00"
+    },
+    {
+      "id": 4,
+      "cycle_id": "8d72dfd9-2831-4b3a-8fbf-59504f3ccd27",
+      "actions": "None",
+      "created_at": "2026-03-18T05:35:19.567051+00:00"
+    },
+    {
+      "id": 5,
+      "cycle_id": "07e337e8-0791-4be2-b635-c1e8c077035e",
+      "actions": "None",
+      "created_at": "2026-03-18T05:48:51.355434+00:00"
+    }
+  ]
+}

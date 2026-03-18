@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument(
         "--pump-duration",
         type=int,
-        default=5,
+        default=1,
         help="Number of seconds the water pump stays on when watering",
     )
     parser.add_argument(

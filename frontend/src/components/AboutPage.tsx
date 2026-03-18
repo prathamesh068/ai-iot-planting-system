@@ -90,7 +90,7 @@ export default function AboutPage({ isDark }: Props) {
                         }}
                     />
                     <img
-                        src="/icon.png"
+                        src={`${import.meta.env.BASE_URL}icon.png`}
                         alt="Project icon"
                         style={{
                             width: 250,

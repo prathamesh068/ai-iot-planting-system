@@ -55,9 +55,18 @@ class SmartPlantSystem:
 
         self.log.info("AI", "Sending data for analysis")
         ai_result, prompt_md, response_md = self.ai.analyze(temp, hum, light, soil_summary)
+
+        plant_data = ai_result.get("plant", {}) if isinstance(ai_result, dict) else {}
+        disease_data = ai_result.get("disease", {}) if isinstance(ai_result, dict) else {}
+        plant_name = plant_data.get("name", "Unknown") if isinstance(plant_data, dict) else str(plant_data)
+        disease_name = disease_data.get("name", "Unknown") if isinstance(disease_data, dict) else str(disease_data)
+        disease_confidence = (
+            disease_data.get("confidence", 0.0) if isinstance(disease_data, dict) else 0.0
+        )
+
         self.log.success(
             "AI",
-            f"Plant={ai_result['plant']} Disease={ai_result['disease']} Confidence={ai_result['confidence']}",
+            f"Plant={plant_name} Disease={disease_name} Confidence={disease_confidence}",
         )
 
         actions = self.actuators.apply(ai_result, temp, soil_majority)

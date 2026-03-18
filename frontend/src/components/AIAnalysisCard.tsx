@@ -1,17 +1,25 @@
-import { Card, Tabs, Empty, Typography } from 'antd';
-import { RobotOutlined, SendOutlined, MessageOutlined } from '@ant-design/icons';
+import { Card, Tabs, Empty, Typography, List, Tag } from 'antd';
+import { RobotOutlined, SendOutlined, MessageOutlined, OrderedListOutlined } from '@ant-design/icons';
 import { syntaxHighlightJson } from '../utils/htmlHelpers';
+import type { TodoItem } from '../types';
 
 const { Text } = Typography;
 
 interface Props {
     prompt: string | null;
     response: string | null;
+    todos: TodoItem[];
     isDark: boolean;
 }
 
-export default function AIAnalysisCard({ prompt, response, isDark }: Props) {
-    if (!prompt && !response) return null;
+function priorityColor(priority: TodoItem['priority']): string {
+    if (priority === 'HIGH') return 'red';
+    if (priority === 'MEDIUM') return 'orange';
+    return 'blue';
+}
+
+export default function AIAnalysisCard({ prompt, response, todos, isDark }: Props) {
+    if (!prompt && !response && todos.length === 0) return null;
 
     const cardBg = isDark ? '#1e293b' : '#ffffff';
     const panelBg = isDark ? '#0f172a' : '#f8fafc';
@@ -82,6 +90,43 @@ export default function AIAnalysisCard({ prompt, response, isDark }: Props) {
                 />
             ),
         },
+        {
+            key: 'todos',
+            label: (
+                <span>
+                    <OrderedListOutlined style={{ marginRight: 6 }} />
+                    TODOs
+                </span>
+            ),
+            children: todos.length > 0 ? (
+                <div style={panelStyle}>
+                    <List
+                        size="small"
+                        dataSource={todos}
+                        renderItem={(todo, index) => (
+                            <List.Item>
+                                <div style={{ width: '100%' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                        <Text strong style={{ color: textC }}>
+                                            {index + 1}. {todo.action}
+                                        </Text>
+                                        <Tag color={priorityColor(todo.priority)} style={{ marginInlineEnd: 0 }}>
+                                            {todo.priority}
+                                        </Tag>
+                                    </div>
+                                    <Text style={{ color: mutedC, fontSize: 12 }}>{todo.reason}</Text>
+                                </div>
+                            </List.Item>
+                        )}
+                    />
+                </div>
+            ) : (
+                <Empty
+                    description={<Text style={{ color: mutedC }}>No TODO data</Text>}
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+            ),
+        },
     ];
 
     return (
@@ -96,10 +141,10 @@ export default function AIAnalysisCard({ prompt, response, isDark }: Props) {
             styles={{ body: { paddingTop: 0 } }}
         >
             <Tabs
-                defaultActiveKey="response"
+                defaultActiveKey="todos"
                 items={items}
                 size="small"
-                style={{ marginTop: 2}}
+                style={{ marginTop: 2 }}
             />
         </Card>
     );

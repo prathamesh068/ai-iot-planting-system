@@ -28,6 +28,7 @@ create table if not exists public.ai_analyses (
   disease text,
   plant text,
   confidence double precision,
+  todos jsonb,
   recommendation jsonb,
   prompt_markdown text,
   response_markdown text,
@@ -46,6 +47,7 @@ alter table public.sensor_readings add column if not exists temp_readings double
 alter table public.sensor_readings add column if not exists hum_readings double precision[];
 alter table public.sensor_readings add column if not exists soil_readings text[];
 alter table public.sensor_readings add column if not exists soil_wetness_pct double precision;
+alter table public.ai_analyses add column if not exists todos jsonb;
 
 create index if not exists idx_plant_cycles_captured_at on public.plant_cycles (captured_at desc);
 create index if not exists idx_sensor_readings_cycle_id on public.sensor_readings (cycle_id);

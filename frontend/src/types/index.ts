@@ -1,3 +1,9 @@
+export interface TodoItem {
+  action: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  reason: string;
+}
+
 export interface PlantRow {
   time: string;
   temp: number | null;
@@ -14,6 +20,7 @@ export interface PlantRow {
   plant: string;
   prompt: string | null;
   response: string | null;
+  todos: TodoItem[];
 }
 
 export interface ProcessedData {
@@ -29,4 +36,5 @@ export interface ProcessedData {
   rows: PlantRow[];
   latestPrompt: string | null;
   latestResponse: string | null;
+  latestTodos: TodoItem[];
 }

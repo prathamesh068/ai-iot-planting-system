@@ -47,6 +47,17 @@ class RealSupabaseService(BaseSupabaseService):
     def log_cycle(self, payload: Mapping[str, Any]) -> None:
         ai_result = payload.get("ai_result", {}) or {}
         recommendation = ai_result.get("recommendation", {}) or {}
+        todos = ai_result.get("todos", []) or []
+        plant_data = ai_result.get("plant", {}) or {}
+        disease_data = ai_result.get("disease", {}) or {}
+
+        plant_name = plant_data.get("name") if isinstance(plant_data, dict) else plant_data
+        disease_name = disease_data.get("name") if isinstance(disease_data, dict) else disease_data
+        confidence = (
+            disease_data.get("confidence")
+            if isinstance(disease_data, dict)
+            else ai_result.get("confidence")
+        )
 
         cycle_payload = {
             "captured_at": payload.get("timestamp"),
@@ -76,9 +87,10 @@ class RealSupabaseService(BaseSupabaseService):
         self._client.table("ai_analyses").insert(
             {
                 "cycle_id": cycle_id,
-                "disease": ai_result.get("disease"),
-                "plant": ai_result.get("plant"),
-                "confidence": ai_result.get("confidence"),
+                "disease": disease_name,
+                "plant": plant_name,
+                "confidence": confidence,
+                "todos": todos,
                 "recommendation": recommendation,
                 "prompt_markdown": payload.get("prompt_md"),
                 "response_markdown": payload.get("response_md"),

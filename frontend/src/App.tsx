@@ -355,6 +355,7 @@ export default function App() {
                             <AIAnalysisCard
                                 prompt={data.latestPrompt}
                                 response={data.latestResponse}
+                                todos={data.latestTodos}
                                 isDark={isDark}
                             />
                         </>

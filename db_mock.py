@@ -142,18 +142,129 @@ def populate_mock_data():
             plant = random.choice(plants)
             confidence = round(random.uniform(0.7, 0.99), 2)
             
+            todos = []
+            if wet_count <= 2:
+                todos.append(
+                    {
+                        "action": "Irrigate the plant",
+                        "priority": "HIGH",
+                        "reason": "Majority soil reading is DRY.",
+                    }
+                )
+            if temp > 30:
+                todos.append(
+                    {
+                        "action": "Reduce ambient temperature",
+                        "priority": "HIGH",
+                        "reason": "Temperature is above 30C.",
+                    }
+                )
+                todos.append(
+                    {
+                        "action": "Increase airflow around the plant",
+                        "priority": "MEDIUM",
+                        "reason": "High temperature can stress plants.",
+                    }
+                )
+            if disease != "No disease found":
+                todos.append(
+                    {
+                        "action": "Inspect infected leaves and isolate affected area",
+                        "priority": "HIGH",
+                        "reason": "Visible disease symptoms require immediate containment.",
+                    }
+                )
+            if not todos:
+                todos.append(
+                    {
+                        "action": "Continue routine monitoring",
+                        "priority": "LOW",
+                        "reason": "No immediate intervention is required.",
+                    }
+                )
+
+            disease_confidence = round(random.uniform(0.7, 0.99), 2)
+            disease_reason = (
+                "No visible lesions, spotting, or discoloration detected."
+                if disease == "No disease found"
+                else f"Visible symptoms consistent with {disease} observed on leaves."
+            )
+
+            light_state_for_record = sensor_payload["light_state"]
+            soil_summary_for_record = sensor_payload["soil_summary"]
+
+            prompt_markdown = (
+                "You are an agricultural AI in an IoT system.\n\n"
+                "Sensor Data:\n"
+                f"- Temperature: {temp} C\n"
+                f"- Humidity: {hum} %\n"
+                f"- Light: {light_state_for_record}\n"
+                f"- Soil Moisture: {soil_summary_for_record}\n\n"
+                "Image Analysis Rules:\n"
+                "- First detect plant. If unsure, return \"No plant detected\"\n"
+                "- Only detect diseases relevant to the identified plant\n"
+                "- If no disease is visible, return \"No disease found\"\n"
+                "- Always provide a confidence score (0-100) for plant and disease separately\n\n"
+                "Soil Rules:\n"
+                "- Soil moisture is reported as \"X/Total DRY\" or \"X/Total WET\"\n"
+                "- Recommend watering ONLY if the majority soil reading is DRY\n\n"
+                "Environment Rules:\n"
+                "- Recommend airflow if disease detected OR temperature > 30\n"
+                "- Recommend temperature reduction ONLY if temperature > 30\n\n"
+                "Response Rules:\n"
+                "- All actions must be structured as TODO items with priority\n"
+                "- Priority levels: HIGH, MEDIUM, LOW\n"
+                "- HIGH -> immediate risk (disease, extreme heat, fully dry soil)\n"
+                "- MEDIUM -> preventive care\n"
+                "- LOW -> general optimization\n\n"
+                "Output Format (STRICT JSON ONLY):\n\n"
+                "{\n"
+                "    \"plant\": {\"name\": \"<plant_name | No plant detected>\", \"confidence\": <0-100>},\n"
+                "    \"disease\": {\"name\": \"<disease_name | No disease found>\", \"confidence\": <0-100>, \"reason\": \"<short visual justification>\"},\n"
+                "    \"environment\": {\"temperature\": <temp>, \"humidity\": <humidity>, \"light\": \"<light>\", \"soil\": \"<soil>\"},\n"
+                "    \"todos\": [{\"action\": \"<what to do>\", \"priority\": \"HIGH | MEDIUM | LOW\", \"reason\": \"<why>\"}]\n"
+                "}\n\n"
+                "Behavior Constraints:\n"
+                "- Do NOT hallucinate diseases unrelated to the plant\n"
+                "- If plant is unknown -> disease must be \"Unknown\"\n"
+                "- If no disease -> no HIGH priority disease actions\n"
+                "- Keep reasons short and technical (no storytelling)\n"
+                "- Do NOT return anything except JSON"
+            )
+
+            ai_response_obj = {
+                "plant": {
+                    "name": plant,
+                    "confidence": round(confidence * 100, 1),
+                },
+                "disease": {
+                    "name": disease,
+                    "confidence": round(disease_confidence * 100, 1),
+                    "reason": disease_reason,
+                },
+                "environment": {
+                    "temperature": temp,
+                    "humidity": hum,
+                    "light": light_state_for_record,
+                    "soil": soil_summary_for_record,
+                },
+                "todos": todos,
+            }
+            response_markdown = f"```json\n{json.dumps(ai_response_obj, indent=2)}\n```"
+
             ai_payload = {
                 "cycle_id": cycle_id,
                 "disease": disease,
                 "plant": plant,
                 "confidence": confidence,
+                "todos": todos,
                 "recommendation": {
                     "reduce_temperature": temp > 28,
                     "water_plant": wet_count <= 2,
                     "increase_airflow": disease != "No disease found" or temp > 30,
                 },
-                "prompt_markdown": f"Analyze plant for {plant}",
-                "response_markdown": json.dumps({"status": "analyzed", "plant": plant}),
+                "prompt_markdown": prompt_markdown,
+                "response_markdown": response_markdown,
             }
             supabase.table("ai_analyses").insert(ai_payload).execute()
             

@@ -187,7 +187,7 @@ export default function DataTable({ rows, isDark }: Props) {
             title: 'Action',
             dataIndex: 'action',
             key: 'action',
-            width: 100,
+            width: 210,
             render: (v: string) => (
                 <Tag color="green" style={{ fontSize: 11 }}>{v}</Tag>
             ),

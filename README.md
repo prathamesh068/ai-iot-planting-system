@@ -105,6 +105,30 @@ Command listener mode (waits for UI broadcast and starts frequent cycles):
 python3 run.py --listen-commands
 ```
 
+### 6. Auto-start on Raspberry Pi boot (systemd)
+
+Use the included installer script:
+
+```bash
+chmod +x scripts/install_pi_autostart.sh
+./scripts/install_pi_autostart.sh
+```
+
+This creates and enables a `systemd` service that runs:
+
+```bash
+.venv/bin/python run.py --listen-commands
+```
+
+Useful commands:
+
+```bash
+sudo systemctl status ai-iot-planting-system.service
+sudo journalctl -u ai-iot-planting-system.service -f
+sudo systemctl restart ai-iot-planting-system.service
+sudo systemctl disable ai-iot-planting-system.service
+```
+
 Mock mode:
 
 ```bash

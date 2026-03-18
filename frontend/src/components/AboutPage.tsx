@@ -5,6 +5,7 @@ import {
 import {
     UserOutlined, BankOutlined, NumberOutlined, TagsOutlined,
 } from '@ant-design/icons';
+import creatorsData from './creators.json';
 
 const { Title, Text } = Typography;
 
@@ -31,19 +32,18 @@ export default function AboutPage({ isDark }: Props) {
     const [fetchError, setFetchError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/creators.json')
-            .then((res) => {
-                if (!res.ok) throw new Error(`Failed to load creators.json (${res.status})`);
-                return res.json() as Promise<Creator[]>;
-            })
-            .then((data) => {
-                setCreators(data);
-            })
-            .catch((err: unknown) => {
-                setFetchError(err instanceof Error ? err.message : String(err));
-            })
-            .finally(() => setLoading(false));
+        setTimeout(() => {
+            // Simulate fetch delay and potential error
+            if (creatorsData && Array.isArray(creatorsData)) {
+                setCreators(creatorsData);
+                setLoading(false);
+            } else {
+                setFetchError('Invalid data format in creators.json');
+                setLoading(false);
+            }
+        }, 1200);
     }, []);
+
 
     const cardBg = isDark ? '#1e293b' : '#ffffff';
     const mutedColor = isDark ? '#94a3b8' : '#64748b';
@@ -90,7 +90,7 @@ export default function AboutPage({ isDark }: Props) {
                         }}
                     />
                     <img
-                        src={`${import.meta.env.BASE_URL}icon.png`}
+                        src="./icon.png"
                         alt="Project icon"
                         style={{
                             width: 250,

@@ -116,7 +116,7 @@ export default function App() {
                                 }}
                             />
                             <img
-                                src={`${import.meta.env.BASE_URL}icon.png`}
+                                src="./icon.png"
                                 alt="Project icon"
                                 style={{
                                     width: 19,

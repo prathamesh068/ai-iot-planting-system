@@ -221,4 +221,4 @@ ai-iot-planting-system/
 - supabase (Python): backend database/storage writes
 - @supabase/supabase-js: frontend serverless reads
 - opencv-python: camera capture
-- python-dotenv: environment variable loading
+- python-dotenv: environment variable loading 
